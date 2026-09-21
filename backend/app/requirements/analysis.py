@@ -21,6 +21,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from ..errors import ApiError, ValidationError
+from ..security.network import validate_external_https_url
 
 FINDING_CATEGORIES = {"ambiguous", "conflicting", "duplicate", "missing", "untestable"}
 SEVERITIES = {"low", "medium", "high", "critical"}
@@ -91,9 +92,10 @@ class JsonInferenceAnalyzer(RequirementAnalyzer):
         max_tokens: int = 4096,
     ):
         self.provider = provider
-        parsed = urlparse(url)
-        if parsed.scheme != "https" or not parsed.netloc:
-            raise ValidationError(f"{provider} inference URL must be an absolute HTTPS URL")
+        try:
+            validate_external_https_url(url, f"{provider} inference URL")
+        except ValueError as exc:
+            raise ValidationError(str(exc)) from exc
         self.url = url
         self.api_key = api_key
         self.model = model
@@ -128,6 +130,7 @@ class JsonInferenceAnalyzer(RequirementAnalyzer):
                 },
                 json=self._payload(content),
                 timeout=self.timeout,
+                allow_redirects=False,
             )
             response.raise_for_status()
             return response.json()

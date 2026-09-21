@@ -1,6 +1,6 @@
 import functools
 
-from flask import g, request
+from flask import current_app, g, request
 
 from ..errors import AuthenticationError, AuthorizationError
 from ..models import Organization, Token, User
@@ -31,7 +31,7 @@ def load_context() -> Token:
     g.user = user
     g.organization = org
     g.token = token
-    touch(token)
+    touch(token, current_app.config["TOKEN_ACTIVITY_UPDATE_SECONDS"])
     return token
 
 

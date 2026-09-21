@@ -14,13 +14,13 @@ import posixpath
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from urllib.parse import urlparse
 
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from ..errors import ApiError, ValidationError
+from ..security.network import validate_external_https_url
 
 
 class AgentExecutionError(ApiError):
@@ -133,6 +133,7 @@ class ManagedInferenceAgentExecutor(AgentExecutor):
                 },
                 json=payload,
                 timeout=self.timeout,
+                allow_redirects=False,
             )
             response.raise_for_status()
             return response.json()
@@ -352,6 +353,7 @@ def validate_diff_against_snapshot(diff: str, path: str, snapshot: str) -> None:
 
 
 def _require_https_endpoint(url: str, provider: str) -> None:
-    parsed = urlparse(str(url))
-    if parsed.scheme != "https" or not parsed.netloc:
-        raise AgentExecutionError(f"{provider} inference URL must be an absolute HTTPS URL")
+    try:
+        validate_external_https_url(url, f"{provider} inference URL")
+    except ValueError as exc:
+        raise AgentExecutionError(str(exc)) from exc

@@ -166,9 +166,16 @@ def after_request(response):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-    response.headers["Content-Security-Policy"] = (
-        "default-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
-    )
+    if request.path.startswith("/docs"):
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self' https://unpkg.com; "
+            "style-src 'self' https://unpkg.com; object-src 'none'; "
+            "base-uri 'self'; frame-ancestors 'none'"
+        )
+    else:
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+        )
     if current_app.config.get("ENVIRONMENT", "").lower() == "production":
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     if getattr(g, "rate_limit_retry_after", None):

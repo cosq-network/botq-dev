@@ -38,7 +38,20 @@ def is_valid(token: Token) -> bool:
     return True
 
 
-def touch(token: Token) -> None:
-    token.last_used_at = utcnow()
+def touch(token: Token, update_interval_seconds: int = 300) -> bool:
+    """Persist token activity at most once per configured interval.
+
+    Authentication still validates the token on every request; this throttle
+    only reduces the write load caused by recording ``last_used_at``.
+    """
+    now = utcnow()
+    if (
+        token.last_used_at is not None
+        and update_interval_seconds > 0
+        and now - token.last_used_at < timedelta(seconds=update_interval_seconds)
+    ):
+        return False
+    token.last_used_at = now
     db.session.add(token)
     db.session.commit()
+    return True

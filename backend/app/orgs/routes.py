@@ -1,3 +1,4 @@
+import hmac
 from uuid import UUID
 
 from flask import Blueprint, current_app, g, request
@@ -31,7 +32,8 @@ def create_org():
     if not current_app.config.get("BOOTSTRAP_ENABLED", False):
         raise AuthorizationError("Organization bootstrap is disabled")
     token = request.headers.get("X-Bootstrap-Token", "")
-    if token != current_app.config["SECRET_KEY"]:
+    expected = current_app.config.get("BOOTSTRAP_TOKEN", "")
+    if not expected or not hmac.compare_digest(token, expected):
         raise AuthorizationError("Invalid bootstrap token")
     payload = request.get_json(silent=True) or {}
     name = (payload.get("name") or "").strip()
@@ -65,7 +67,8 @@ def list_orgs():
     if not current_app.config.get("BOOTSTRAP_ENABLED", False):
         raise AuthorizationError("Organization bootstrap is disabled")
     token = request.headers.get("X-Bootstrap-Token", "")
-    if token != current_app.config["SECRET_KEY"]:
+    expected = current_app.config.get("BOOTSTRAP_TOKEN", "")
+    if not expected or not hmac.compare_digest(token, expected):
         raise AuthorizationError("Invalid bootstrap token")
     orgs = Organization.query.order_by(Organization.name.asc()).all()
     return ok(

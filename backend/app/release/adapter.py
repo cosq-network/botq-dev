@@ -19,6 +19,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from ..errors import ApiError
+from ..security.network import validate_external_https_url
 
 
 class DeploymentProviderError(ApiError):
@@ -60,9 +61,10 @@ class WebhookDeploymentAdapter(DeploymentAdapter):
             ("DEPLOYMENT_URL", self.url),
             ("DEPLOYMENT_ROLLBACK_URL", self.rollback_url),
         ):
-            parsed = urlparse(value)
-            if parsed.scheme != "https" or not parsed.netloc:
-                raise DeploymentProviderError(f"{name} must be an absolute HTTPS URL")
+            try:
+                validate_external_https_url(value, name)
+            except ValueError as exc:
+                raise DeploymentProviderError(str(exc)) from exc
         if self.timeout <= 0 or self.timeout > 3600:
             raise DeploymentProviderError("DEPLOYMENT_TIMEOUT_SECONDS must be between 1 and 3600")
 
@@ -98,6 +100,7 @@ class WebhookDeploymentAdapter(DeploymentAdapter):
                 },
                 json=payload,
                 timeout=self.timeout,
+                allow_redirects=False,
             )
             response.raise_for_status()
             document = response.json()

@@ -1,7 +1,9 @@
 from flask import Blueprint, request
+from pydantic import ValidationError
 
 from ..auth.decorators import load_context
-from ..errors import AuthenticationError
+from ..errors import ApiError, AuthenticationError
+from .dtos import request_dto_for
 
 api = Blueprint("api", __name__, url_prefix="/api/v1")
 
@@ -19,12 +21,45 @@ PUBLIC_ENDPOINTS = {
 @api.before_request
 def _require_authentication():
     if request.endpoint in PUBLIC_ENDPOINTS:
+        _validate_typed_request()
         return None
     try:
         load_context()
     except AuthenticationError:
         raise
+    _validate_typed_request()
     return None
+
+
+def _validate_typed_request() -> None:
+    """Validate JSON bodies before a controller reads them."""
+    if request.method not in {"POST", "PUT", "PATCH"}:
+        return
+    from flask import current_app
+
+    view = current_app.view_functions.get(request.endpoint)
+    model = request_dto_for(request.endpoint or "request", view)
+    payload = request.get_json(silent=True)
+    if payload is None:
+        payload = {}
+    if not isinstance(payload, dict):
+        raise ApiError(
+            "Request body must be a JSON object",
+            code="validation_error",
+            status=422,
+        )
+    try:
+        normalized = model.model_validate(payload).model_dump(exclude_none=True)
+    except ValidationError as exc:
+        raise ApiError(
+            "Request body failed DTO validation",
+            code="validation_error",
+            status=422,
+            details={"fields": exc.errors(include_url=False, include_input=False)},
+        ) from exc
+    # Preserve the existing controller API while ensuring every subsequent
+    # request.get_json() call receives the validated DTO representation.
+    request._cached_json = (normalized, normalized)
 
 
 from ..approvals.routes import bp as approvals_bp  # noqa: E402

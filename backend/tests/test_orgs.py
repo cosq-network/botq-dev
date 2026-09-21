@@ -6,10 +6,19 @@ def test_bootstrap_org_needs_token(client):
     assert resp.status_code == 403
 
 
+def test_bootstrap_token_is_dedicated(client):
+    response = client.post(
+        "/api/v1/organizations",
+        headers={"X-Bootstrap-Token": "test-secret-key"},
+        json={"name": "Should Not Work"},
+    )
+    assert response.status_code == 403
+
+
 def test_bootstrap_org(client, app):
     resp = client.post(
         "/api/v1/organizations",
-        headers={"X-Bootstrap-Token": "test-secret-key"},
+        headers={"X-Bootstrap-Token": "test-bootstrap-token"},
         json={"name": "Acme Corp", "slug": "acme"},
     )
     assert resp.status_code == 201
@@ -27,7 +36,7 @@ def test_bootstrap_org(client, app):
 
 
 def test_duplicate_slug_rejected(client):
-    headers = {"X-Bootstrap-Token": "test-secret-key"}
+    headers = {"X-Bootstrap-Token": "test-bootstrap-token"}
     assert (
         client.post(
             "/api/v1/organizations", headers=headers, json={"name": "A", "slug": "acme"}
@@ -59,7 +68,7 @@ def test_list_orgs_requires_bootstrap_token(client, auth_headers):
 def test_audit_event_on_org_bootstrap(client, app):
     client.post(
         "/api/v1/organizations",
-        headers={"X-Bootstrap-Token": "test-secret-key"},
+        headers={"X-Bootstrap-Token": "test-bootstrap-token"},
         json={"name": "Trace Co", "slug": "trace"},
     )
     from app.models import AuditEvent

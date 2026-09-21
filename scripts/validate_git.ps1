@@ -17,7 +17,7 @@
     docker compose exec api flask bootstrap --org-name "Acme" --slug "acme" --email "admin@acme.local" --password "S3curePass!"
 #>
 param(
-    [string]$Base = "http://localhost:8080",
+    [string]$Base = "http://localhost:8884",
     [string]$Email = "admin@acme.local",
     [string]$Password = "S3curePass!",
     [string]$Organization = "acme",

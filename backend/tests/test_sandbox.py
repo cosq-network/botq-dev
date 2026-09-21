@@ -73,6 +73,13 @@ def test_runner_rejects_disallowed_network(app):
         runner.run("python:3.13-slim", "true", network="bridge")
 
 
+def test_runner_requires_explicit_host_network_opt_in(app):
+    app.config["SANDBOX_NETWORK_ALLOWLIST"] = ["none", "host"]
+    runner = DockerSandboxRunner(app)
+    with pytest.raises(SandboxDenied, match="SANDBOX_ALLOW_HOST_NETWORK"):
+        runner.run("python:3.13-slim", "true", network="host")
+
+
 def test_runner_unavailable_when_no_sdk(monkeypatch, app):
     import builtins
 

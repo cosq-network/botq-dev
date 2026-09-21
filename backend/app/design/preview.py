@@ -10,13 +10,13 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from urllib.parse import urlparse
 
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from ..errors import ApiError
+from ..security.network import validate_external_https_url
 
 
 class PreviewDeploymentError(ApiError):
@@ -49,9 +49,10 @@ class WebhookPreviewDeploymentAdapter(PreviewDeploymentAdapter):
             raise PreviewDeploymentError(
                 "Preview deployment requires PREVIEW_DEPLOYMENT_URL and PREVIEW_DEPLOYMENT_TOKEN"
             )
-        parsed = urlparse(self.url)
-        if parsed.scheme != "https" or not parsed.netloc:
-            raise PreviewDeploymentError("PREVIEW_DEPLOYMENT_URL must be an absolute HTTPS URL")
+        try:
+            validate_external_https_url(self.url, "PREVIEW_DEPLOYMENT_URL")
+        except ValueError as exc:
+            raise PreviewDeploymentError(str(exc)) from exc
 
     def provision(self, manifest: dict) -> ProvisionedPreview:
         session = requests.Session()
@@ -77,6 +78,7 @@ class WebhookPreviewDeploymentAdapter(PreviewDeploymentAdapter):
                 },
                 json=manifest,
                 timeout=self.timeout,
+                allow_redirects=False,
             )
             response.raise_for_status()
             payload = response.json()
@@ -99,9 +101,10 @@ def parse_provisioned_preview(payload: dict) -> ProvisionedPreview:
     if not isinstance(payload, dict):
         raise PreviewDeploymentError("Preview deployment response must be an object")
     url = payload.get("url")
-    parsed = urlparse(str(url or ""))
-    if parsed.scheme != "https" or not parsed.netloc:
-        raise PreviewDeploymentError("Preview deployment response must contain an HTTPS url")
+    try:
+        validate_external_https_url(str(url or ""), "Preview deployment response URL")
+    except ValueError as exc:
+        raise PreviewDeploymentError(str(exc)) from exc
     deployment_id = payload.get("deployment_id")
     if deployment_id is not None and not isinstance(deployment_id, str):
         raise PreviewDeploymentError("deployment_id must be a string or null")

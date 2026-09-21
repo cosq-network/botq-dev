@@ -1,4 +1,7 @@
 services:
+  db:
+    ports: !override []
+
   proxy:
     ports: !override
-      - "${BOTQ_PILOT_PORT:-18082}:80"
+      - "${BOTQ_PILOT_PORT:-8886}:80"

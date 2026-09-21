@@ -19,7 +19,7 @@ volumes in a `finally` block.
 
 The defaults are:
 
-- API: `http://127.0.0.1:18081` (override with `BOTQ_E2E_PORT` or `BOTQ_E2E_BASE_URL`)
+- API: `http://127.0.0.1:8885` (override with `BOTQ_E2E_PORT` or `BOTQ_E2E_BASE_URL`)
 - organization: `acme`
 - administrator: `admin@acme.local`
 - reviewer: `reviewer@acme.local`

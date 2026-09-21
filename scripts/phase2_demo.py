@@ -1,4 +1,4 @@
-"""Phase 2 end-to-end smoke test against a running stack (nginx on :8080).
+"""Phase 2 end-to-end smoke test against a running stack (nginx on :8884).
 
 Covers: requirement baseline intake -> analysis -> submit -> approval loop with
 segregation of duties, and the Work Item hierarchy with dependencies + circular rejection.
@@ -9,7 +9,7 @@ import sys
 
 import requests
 
-BASE = "http://localhost:8080/api/v1"
+BASE = "http://localhost:8884/api/v1"
 ORG = "acme"
 ADMIN = ("admin@acme.local", "S3curePass!")
 REVIEWER = ("owner@acme.local", "OwnerPass123!")

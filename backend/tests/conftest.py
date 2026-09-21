@@ -3,6 +3,7 @@ import os
 os.environ.setdefault("DATABASE_URL", "sqlite://")
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 os.environ.setdefault("AUDIT_SECRET", "test-audit-chain-secret")
+os.environ.setdefault("BOOTSTRAP_TOKEN", "test-bootstrap-token")
 
 import pytest
 from sqlalchemy import event

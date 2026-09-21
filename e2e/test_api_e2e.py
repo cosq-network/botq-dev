@@ -231,7 +231,7 @@ def workflow(admin, reviewer, unique_suffix):
 
 def test_auth_health_and_organization_apis(e2e_base_url, admin):
     assert admin.data("GET", "/api/v1/auth/providers")
-    bootstrap_headers = {"X-Bootstrap-Token": "e2e-secret-key"}
+    bootstrap_headers = {"X-Bootstrap-Token": "e2e-bootstrap-token"}
     admin.request(
         "GET", "/api/v1/organizations", headers=bootstrap_headers, expected=200
     )

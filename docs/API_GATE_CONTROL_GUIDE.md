@@ -45,7 +45,7 @@ between reviewers or automation jobs.
 Example authorized-client request:
 
 ```bash
-export BOTQ_URL="http://127.0.0.1:18082"
+export BOTQ_URL="http://127.0.0.1:8886"
 export BOTQ_TOKEN="<token from the authorized reviewer login>"
 curl -sS "$BOTQ_URL/api/v1/organizations/me" \
   -H "Authorization: Bearer $BOTQ_TOKEN"

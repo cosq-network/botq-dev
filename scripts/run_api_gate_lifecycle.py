@@ -156,7 +156,7 @@ def run(args: argparse.Namespace) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base-url", default=os.environ.get("BOTQ_URL", "http://127.0.0.1:18082"))
+    parser.add_argument("--base-url", default=os.environ.get("BOTQ_URL", "http://127.0.0.1:8886"))
     parser.add_argument("--organization", default=os.environ.get("BOTQ_ORGANIZATION", "pilot"))
     parser.add_argument("--project-id", default=os.environ.get("BOTQ_PROJECT_ID"), required=False)
     parser.add_argument("--admin-email", default=os.environ.get("BOTQ_ADMIN_EMAIL"))

@@ -12,6 +12,8 @@ from pathlib import Path
 def validate(root: Path) -> dict:
     backend = root / "backend"
     sys.path.insert(0, str(backend))
+    from cryptography.fernet import Fernet
+
     from app import create_app
     from app.config import Config
 
@@ -19,10 +21,14 @@ def validate(root: Path) -> dict:
         ENVIRONMENT = "production"
         SECRET_KEY = "security-baseline-secret"
         AUDIT_SECRET = "security-baseline-audit-secret"
+        SECRET_ENCRYPTION_KEY = Fernet.generate_key().decode()
+        BOOTSTRAP_ENABLED = False
         SQLALCHEMY_DATABASE_URI = "sqlite://"
         SQLALCHEMY_TRACK_MODIFICATIONS = False
         TESTING = True
-        RATE_LIMIT_ENABLED = False
+        RATE_LIMIT_ENABLED = True
+        RATE_LIMIT_BACKEND = "redis"
+        REDIS_URL = "redis://security-baseline.invalid:6379/0"
         SESSION_COOKIE_SECURE = True
 
     app = create_app(SecurityConfig)

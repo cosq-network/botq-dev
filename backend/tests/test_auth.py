@@ -1,5 +1,8 @@
-from app.auth.tokens import create_token, is_valid, revoke_token
+from datetime import timedelta
+
+from app.auth.tokens import create_token, is_valid, revoke_token, touch
 from app.models import Token
+from app.utils import utcnow
 
 
 def test_local_login_success(client, org, admin):
@@ -60,6 +63,20 @@ def test_token_lifecycle(admin):
     stored = Token.query.get(token.id)
     assert stored.token_hash == token_hash
     assert stored.revoked_at is not None
+
+
+def test_token_activity_updates_are_throttled(admin):
+    _, token = create_token(admin, 3600)
+
+    assert touch(token, update_interval_seconds=300) is True
+    first_activity = token.last_used_at
+
+    assert touch(token, update_interval_seconds=300) is False
+    assert token.last_used_at == first_activity
+
+    token.last_used_at = utcnow() - timedelta(seconds=301)
+    assert touch(token, update_interval_seconds=300) is True
+    assert token.last_used_at > first_activity
 
 
 def test_local_login_is_scoped_to_requested_organization(client, org):

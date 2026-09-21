@@ -40,6 +40,23 @@ def create_app(config_object=None):
         for name, default in insecure.items():
             if app.config.get(name) == default:
                 raise RuntimeError(f"{name} must be configured in production")
+        encryption_key = app.config.get("SECRET_ENCRYPTION_KEY", "")
+        if not encryption_key:
+            raise RuntimeError("SECRET_ENCRYPTION_KEY must be configured in production")
+        try:
+            from cryptography.fernet import Fernet
+
+            Fernet(encryption_key.encode())
+        except Exception as exc:
+            raise RuntimeError("SECRET_ENCRYPTION_KEY must be a valid Fernet key") from exc
+        if not app.config.get("RATE_LIMIT_ENABLED") or app.config.get("RATE_LIMIT_BACKEND") != "redis":
+            raise RuntimeError(
+                "Production rate limiting must be enabled with RATE_LIMIT_BACKEND=redis"
+            )
+        if "host" in app.config.get("SANDBOX_NETWORK_ALLOWLIST", []):
+            raise RuntimeError("Host sandbox networking is not allowed in production")
+        if app.config.get("BOOTSTRAP_ENABLED") and not app.config.get("BOOTSTRAP_TOKEN"):
+            raise RuntimeError("BOOTSTRAP_TOKEN is required when production bootstrap is enabled")
     app.config["DEFAULT_ORG_SLUG"] = os.environ.get("DEFAULT_ORG_SLUG", "cdx")
 
     _configure_logging(app)
@@ -59,9 +76,11 @@ def create_app(config_object=None):
 
     from .api import api
     from .api.health import hp
+    from .api.openapi import docs_bp
 
     app.register_blueprint(api)
     app.register_blueprint(hp)
+    app.register_blueprint(docs_bp)
 
     from .errors import register_error_handlers
 

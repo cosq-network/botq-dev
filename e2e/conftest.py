@@ -54,7 +54,7 @@ def _login(base_url: str, email: str, password: str, organization: str) -> ApiCl
 
 @pytest.fixture(scope="session")
 def e2e_base_url():
-    return os.environ.get("BOTQ_E2E_BASE_URL", "http://127.0.0.1:18081").rstrip("/")
+    return os.environ.get("BOTQ_E2E_BASE_URL", "http://127.0.0.1:8885").rstrip("/")
 
 
 @pytest.fixture(scope="session", autouse=True)

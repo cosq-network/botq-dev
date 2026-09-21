@@ -105,18 +105,18 @@ Start and initialize the stack:
 docker compose up -d --build
 docker compose exec api flask db upgrade
 docker compose exec api flask bootstrap --org-name "Pilot Org" --slug pilot --email pilot-admin@example.invalid --password "<temporary-strong-password>"
-Invoke-RestMethod http://localhost:8080/health/ready
-Invoke-RestMethod http://localhost:8080/api/v1/auth/providers
+Invoke-RestMethod http://localhost:8884/health/ready
+Invoke-RestMethod http://localhost:8884/api/v1/auth/providers
 ```
 
 The pilot proxy override is intentionally an override, not a standalone Compose project. Use it with
-the base file and the same dotenv file when the pilot runner expects port `18082`:
+the base file and the same dotenv file when the pilot runner expects port `8886`:
 
 ```powershell
 docker compose --env-file backend/.env -f docker-compose.yml -f docker-compose.pilot.yml up -d --build
 ```
 
-If another local pilot already uses `18082`, select another loopback port for this isolated run, for
+If another local pilot already uses `8886`, select another loopback port for this isolated run, for
 example `$env:BOTQ_PILOT_PORT = '18083'`, and pass that port to the pilot scripts with
 `--base-url http://127.0.0.1:18083`.
 
@@ -301,7 +301,7 @@ exercise, checkpoint restart test, metrics and alert verification, and retention
 benchmark helper is:
 
 ```powershell
-& .\backend\.venv\Scripts\python.exe scripts/benchmark_api.py --url http://localhost:8080 --json
+& .\backend\.venv\Scripts\python.exe scripts/benchmark_api.py --url http://localhost:8884 --json
 ```
 
 Use `scripts/validate_recovery.py` with a disposable recovery target and record actual RPO/RTO results.

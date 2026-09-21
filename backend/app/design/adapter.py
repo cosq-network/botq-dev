@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import requests
 
+from ..security.network import validate_external_https_url
+
 
 class PenpotAdapter:
     provider = "penpot"
@@ -51,11 +53,17 @@ class PenpotAdapter:
                 "handoff_required": True,
             }
         path = self.file_path.format(file_id=file_id)
+        endpoint = f"{self.base_url}/{path.lstrip('/')}"
+        try:
+            validate_external_https_url(self.base_url, "PENPOT_API_BASE_URL")
+        except ValueError as exc:
+            return {"available": False, "reason": str(exc)}
         try:
             response = requests.get(
-                f"{self.base_url}/{path.lstrip('/')}",
+                endpoint,
                 headers={"Accept": "application/json", "Authorization": f"Bearer {self.api_token}"},
                 timeout=self.timeout,
+                allow_redirects=False,
             )
             response.raise_for_status()
             payload = response.json()

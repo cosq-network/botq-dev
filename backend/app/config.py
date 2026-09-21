@@ -22,6 +22,7 @@ class Config:
 
     SECRET_KEY = os.environ.get("SECRET_KEY", "change-me-in-production")
     BOOTSTRAP_ENABLED = _env_bool("BOOTSTRAP_ENABLED", ENVIRONMENT.lower() != "production")
+    BOOTSTRAP_TOKEN = os.environ.get("BOOTSTRAP_TOKEN", "")
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL",
         "postgresql+psycopg2://botq:botq@localhost:5432/botq",
@@ -30,6 +31,11 @@ class Config:
 
     AUTH_MODE = os.environ.get("AUTH_MODE", "local")
     TOKEN_TTL_SECONDS = int(os.environ.get("TOKEN_TTL_SECONDS", "86400"))
+    # Authentication is checked on every request, but token activity only
+    # needs periodic persistence. This avoids a database write per request.
+    TOKEN_ACTIVITY_UPDATE_SECONDS = int(
+        os.environ.get("TOKEN_ACTIVITY_UPDATE_SECONDS", "300")
+    )
     LOCAL_AUTH_ENABLED = _env_bool("LOCAL_AUTH_ENABLED", True)
     OIDC_ENABLED = _env_bool("OIDC_ENABLED", False)
     OIDC_ISSUER = os.environ.get("OIDC_ISSUER", "")
@@ -59,9 +65,10 @@ class Config:
     ]
     SANDBOX_NETWORK_ALLOWLIST = [
         i.strip()
-        for i in os.environ.get("SANDBOX_NETWORK_ALLOWLIST", "none,host").split(",")
+        for i in os.environ.get("SANDBOX_NETWORK_ALLOWLIST", "none").split(",")
         if i.strip()
     ]
+    SANDBOX_ALLOW_HOST_NETWORK = _env_bool("SANDBOX_ALLOW_HOST_NETWORK", False)
     SANDBOX_DEFAULT_LIMITS = {
         "cpu": os.environ.get("SANDBOX_DEFAULT_CPU", "1.0"),
         "memory": os.environ.get("SANDBOX_DEFAULT_MEMORY", "1g"),

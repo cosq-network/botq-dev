@@ -137,6 +137,8 @@ class DockerSandboxRunner:
     def _validate_network(self, network: str) -> None:
         if network not in self.app.config["SANDBOX_NETWORK_ALLOWLIST"]:
             raise SandboxDenied(f"network '{network}' is not allowed")
+        if network == "host" and not self.app.config.get("SANDBOX_ALLOW_HOST_NETWORK", False):
+            raise SandboxDenied("host networking requires explicit SANDBOX_ALLOW_HOST_NETWORK=true")
 
 
 def _memory_bytes(value: str) -> int:

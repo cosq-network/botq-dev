@@ -362,7 +362,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--base-url",
-        default=os.environ.get("BOTQ_PILOT_BASE_URL", "http://127.0.0.1:18082"),
+        default=os.environ.get("BOTQ_PILOT_BASE_URL", "http://127.0.0.1:8886"),
     )
     parser.add_argument(
         "--organization", default=os.environ.get("BOTQ_PILOT_ORGANIZATION", "pilot")
