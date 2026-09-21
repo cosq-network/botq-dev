@@ -25,10 +25,12 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      PYTHONPATH: ${{ github.workspace }}/backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
           cache: pip
@@ -68,21 +70,21 @@ jobs:
       - name: Publish verification evidence
         if: always()
         run: |
-          mkdir -p ../evidence
-          python ../scripts/validate_security_baseline.py --json > ../evidence/security.json
-          python ../scripts/validate_accessibility.py --json > ../evidence/accessibility.json
+          mkdir -p evidence
+          python ../scripts/validate_security_baseline.py --json > evidence/security.json
+          python ../scripts/validate_accessibility.py --json > evidence/accessibility.json
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: verification-evidence
-          path: ../evidence/
+          path: backend/evidence/
 
   build:
     runs-on: ubuntu-latest
     needs: lint-test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build image
         run: docker build -t botq/api:ci ./backend
 
@@ -94,8 +96,8 @@ jobs:
       POSTGRES_PASSWORD: BotqE2e-CI-2026
       BOTQ_E2E_PASSWORD: E2ePass!2026
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
       - name: Install E2E test dependencies
