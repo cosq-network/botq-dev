@@ -1,0 +1,24 @@
+# Phase 6 alert baseline. Adapt metric paths to the production collector.
+groups:
+  - name: botq-control-plane
+    rules:
+      - alert: BotqReadinessFailure
+        expr: health_ready == 0
+        for: 5m
+        severity: critical
+        runbook: docs/PHASE6_OPERATIONS.md#readiness-failure
+      - alert: BotqHttpErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 10m
+        severity: warning
+        runbook: docs/PHASE6_OPERATIONS.md#elevated-http-errors
+      - alert: BotqAgentRunsFailing
+        expr: increase(agent_runs_total{status="failed"}[15m]) > 3
+        for: 5m
+        severity: warning
+        runbook: docs/PHASE6_OPERATIONS.md#agent-run-failures
+      - alert: BotqRequestLatencyBudget
+        expr: http_request_duration_ms_p95 > 500
+        for: 10m
+        severity: warning
+        runbook: docs/PHASE6_OPERATIONS.md#latency-budget

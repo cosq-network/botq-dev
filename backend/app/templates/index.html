@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ app_name }} - AI Software Delivery Platform</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+</head>
+<body>
+  <main>
+    <h1>{{ app_name }}</h1>
+    <p>Human-supervised, agentic software delivery control plane.</p>
+    <p><a href="/workbench">Open the Phase 4 acceptance workbench</a></p>
+    <h2>Phase 1 - Foundation endpoints</h2>
+    <ul>
+      <li><code>GET /health/live</code> - liveness probe</li>
+      <li><code>GET /health/ready</code> - readiness probe (database check)</li>
+      <li><code>GET /api/v1/ping</code> - API ping</li>
+      <li><code>POST /api/v1/auth/login</code> - local login (bearer token)</li>
+      <li><code>GET /api/v1/sandbox/readiness</code> - environment readiness report</li>
+      <li><code>GET /api/v1/audit/verify</code> - audit chain integrity</li>
+    </ul>
+    <p class="ok">Status: <span id="status">checking...</span></p>
+    <script src="{{ url_for('static', filename='index.js') }}" defer></script>
+  </main>
+</body>
+</html>

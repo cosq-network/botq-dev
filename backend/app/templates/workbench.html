@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Human-supervised mockup review, preview acceptance, and defect triage.">
+  <title>{{ app_name }} - Acceptance Workbench</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='workbench.css') }}">
+</head>
+<body>
+  <a class="skip-link" href="#workbench">Skip to workbench</a>
+  <header class="site-header">
+    <div>
+      <p class="eyebrow">{{ app_name }}</p>
+      <h1>Phase 4 acceptance workbench</h1>
+      <p class="subtitle">Review approved designs, launch protected previews, record HAT evidence, and triage defects.</p>
+    </div>
+    <a class="quiet-link" href="/">Control-plane home</a>
+  </header>
+
+  <main id="workbench" class="shell">
+    <section id="login-panel" class="panel" aria-labelledby="login-title">
+      <h2 id="login-title">Sign in</h2>
+      <p class="muted">Use a local account for the pilot or your configured OIDC account.</p>
+      <form id="login-form" class="form-grid">
+        <label>Organization <input id="organization" name="organization" value="cdx" autocomplete="organization" required></label>
+        <label>Email <input id="email" name="email" type="email" autocomplete="username" required></label>
+        <label>Password <input id="password" name="password" type="password" autocomplete="current-password" required></label>
+        <button type="submit">Sign in</button>
+      </form>
+      <p id="login-status" class="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="app-panel" hidden>
+      <div class="toolbar panel">
+        <label>Project ID <input id="project-id" placeholder="UUID" autocomplete="off"></label>
+        <button id="refresh" type="button">Refresh</button>
+        <button id="sign-out" class="secondary" type="button">Sign out</button>
+        <p id="app-status" class="status" role="status" aria-live="polite"></p>
+      </div>
+
+      <div class="layout-grid">
+        <section class="panel" aria-labelledby="mockup-title">
+          <div class="section-heading">
+            <div><p class="eyebrow">Design review</p><h2 id="mockup-title">Approved mockups</h2></div>
+            <button id="load-mockups" class="secondary" type="button">Load</button>
+          </div>
+          <div id="mockups" class="card-list"><p class="muted">Enter a project ID, then load mockups.</p></div>
+        </section>
+
+        <section class="panel" aria-labelledby="preview-title">
+          <div class="section-heading">
+            <div><p class="eyebrow">Interactive review</p><h2 id="preview-title">Protected previews</h2></div>
+            <button id="load-previews" class="secondary" type="button">Load</button>
+          </div>
+          <form id="preview-form" class="stack-form compact-form">
+            <label>Approved mockup ID <input id="preview-mockup-id" required></label>
+            <label>Commit SHA <input id="preview-commit" required></label>
+            <label>Preview URL <span class="hint">leave empty when provisioning through the configured adapter</span><input id="preview-url" type="url" placeholder="https://preview.example/run/123"></label>
+            <label>Expires at <input id="preview-expires" type="datetime-local" required></label>
+            <label class="checkbox"><input id="preview-deploy" type="checkbox"> Provision through preview deployment adapter</label>
+            <button type="submit">Create protected preview</button>
+          </form>
+          <div id="previews" class="card-list"><p class="muted">Approved previews appear here.</p></div>
+        </section>
+      </div>
+
+      <div class="layout-grid lower-grid">
+        <section class="panel" aria-labelledby="hat-title">
+          <p class="eyebrow">Human acceptance testing</p>
+          <h2 id="hat-title">Acceptance session</h2>
+          <form id="session-form" class="stack-form">
+            <label>Preview <select id="session-preview" required><option value="">Load previews first</option></select></label>
+            <label>Criteria <span class="hint">one criterion per line</span><textarea id="session-criteria" rows="5" placeholder="User can open the dashboard\nUser can submit the form" required></textarea></label>
+            <label>Scenario guidance <span class="hint">one step per line</span><textarea id="session-guidance" rows="3" placeholder="Open the preview URL\nComplete the primary workflow"></textarea></label>
+            <button type="submit">Start acceptance session</button>
+          </form>
+          <div id="session" class="session-card" hidden></div>
+        </section>
+
+        <section class="panel" aria-labelledby="defect-title">
+          <div class="section-heading">
+            <div><p class="eyebrow">Triage</p><h2 id="defect-title">Defects</h2></div>
+            <button id="load-defects" class="secondary" type="button">Load</button>
+          </div>
+          <form id="defect-form" class="stack-form">
+            <label>Title <input id="defect-name" required></label>
+            <label>Severity <select id="defect-severity"><option>high</option><option>critical</option><option selected>medium</option><option>low</option></select></label>
+            <label>Expected <textarea id="defect-expected" rows="2" required></textarea></label>
+            <label>Actual <textarea id="defect-actual" rows="2" required></textarea></label>
+            <label>Reproduction steps <span class="hint">one step per line</span><textarea id="defect-steps" rows="3"></textarea></label>
+            <label class="checkbox"><input id="defect-regression" type="checkbox" checked> Regression test required</label>
+            <button type="submit">Log defect</button>
+          </form>
+          <div id="defects" class="card-list"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='workbench.js') }}" defer></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+services:
+  db:
+    volumes:
+      - pgdata-e2e:/var/lib/postgresql/data
+
+  api:
+    environment:
+      APP_NAME: botq-e2e
+      ENVIRONMENT: test
+      SECRET_KEY: e2e-secret-key
+      AUDIT_SECRET: e2e-audit-secret
+      SECRET_ENCRYPTION_KEY: e2e-encryption-key
+      AUTH_MODE: local
+      LOCAL_AUTH_ENABLED: "true"
+      OIDC_ENABLED: "false"
+      BOOTSTRAP_ENABLED: "true"
+      REQUIREMENT_ANALYSIS_PROVIDER: rules
+      AGENT_IMPLEMENTATION_PROVIDER: disabled
+      PENPOT_API_BASE_URL: ""
+      PREVIEW_DEPLOYMENT_URL: ""
+      DEPLOYMENT_URL: ""
+      DEPLOYMENT_ROLLBACK_URL: ""
+      RATE_LIMIT_ENABLED: "false"
+    volumes:
+      - gitkeys-e2e:/srv/botq/secrets/git
+      - workspaces-e2e:/srv/botq/workspaces
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  worker:
+    command: ["sh", "-c", "sleep infinity"]
+    environment:
+      APP_NAME: botq-e2e
+      ENVIRONMENT: test
+      SECRET_KEY: e2e-secret-key
+      AUDIT_SECRET: e2e-audit-secret
+      SECRET_ENCRYPTION_KEY: e2e-encryption-key
+      AUTH_MODE: local
+      LOCAL_AUTH_ENABLED: "true"
+      OIDC_ENABLED: "false"
+      BOOTSTRAP_ENABLED: "true"
+      REQUIREMENT_ANALYSIS_PROVIDER: rules
+      AGENT_IMPLEMENTATION_PROVIDER: disabled
+      RATE_LIMIT_ENABLED: "false"
+    volumes:
+      - gitkeys-e2e:/srv/botq/secrets/git
+      - workspaces-e2e:/srv/botq/workspaces
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  proxy:
+    ports: !override
+      - "${BOTQ_E2E_PORT:-18081}:80"
+
+volumes:
+  pgdata-e2e:
+  gitkeys-e2e:
+  workspaces-e2e:

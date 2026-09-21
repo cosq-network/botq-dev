@@ -1,0 +1,8 @@
+{
+  "title": "botq Control Plane",
+  "panels": [
+    {"title": "HTTP request rate", "type": "timeseries", "targets": [{"expr": "sum(rate(http_requests_total[5m]))"}]},
+    {"title": "HTTP p95 latency", "type": "stat", "targets": [{"expr": "http_request_duration_ms_p95"}]},
+    {"title": "Failed agent runs", "type": "stat", "targets": [{"expr": "increase(agent_runs_total{status=\"failed\"}[15m])"}]}
+  ]
+}
