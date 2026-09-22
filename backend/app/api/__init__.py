@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 from pydantic import ValidationError
 
-from ..auth.decorators import load_context
+from ..auth.decorators import load_context, validate_cookie_csrf
 from ..errors import ApiError, AuthenticationError
 from .dtos import request_dto_for
 
@@ -27,6 +27,8 @@ def _require_authentication():
         load_context()
     except AuthenticationError:
         raise
+    if request.method not in {"GET", "HEAD", "OPTIONS"}:
+        validate_cookie_csrf()
     _validate_typed_request()
     return None
 

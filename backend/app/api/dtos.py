@@ -15,6 +15,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, create_model
 
+from .contracts import EXPLICIT_FIELDS
+
 _KEY_RE = re.compile(
     r"(?:payload|data|body|updates|supplied|content)\s*(?:\.get\(\s*|\[\s*)(['\"])([^'\"]+)\1"
 )
@@ -34,11 +36,11 @@ def request_dto_for(endpoint: str, view) -> type:
             source = inspect.getsource(function)
         except (OSError, TypeError):
             pass
-    fields = _field_types(source)
+    fields = EXPLICIT_FIELDS.get(endpoint, _field_types(source))
     name = _model_name(endpoint)
     annotations = {field: field_type | None for field, field_type in fields.items()}
     defaults = {field: None for field in fields}
-    if not fields:
+    if not fields and endpoint not in EXPLICIT_FIELDS:
         annotations = {"payload": dict[str, Any]}
         defaults = {"payload": None}
     return create_model(
@@ -70,6 +72,30 @@ def _field_types(source: str) -> dict[str, type]:
         fields[field] = bool
     for field in _INT_FIELDS.findall(source):
         fields[field] = int
+    # A few controllers intentionally accept structured domain payloads. The
+    # source-based discovery above cannot reliably infer their types across
+    # multiline expressions, so keep these contracts explicit at the DTO
+    # boundary instead of coercing valid JSON into strings.
+    if "normalize_content(" in source and "content" in fields:
+        fields["content"] = dict[str, Any]
+    if "_validate_plan_content(" in source and "content" in fields:
+        fields["content"] = dict[str, Any]
+    if "_clean_str_list(" in source:
+        for field in ("acceptance_criteria", "source_refs"):
+            if field in fields:
+                fields[field] = list[str]
+    if "is_derived" in fields and (
+        'payload.get("is_derived"' in source or "payload.get('is_derived'" in source
+    ):
+        fields["is_derived"] = bool
+    if "_resolve_roles(" in source and "roles" in fields:
+        fields["roles"] = list[str]
+    if "_criteria(" in source and "criteria" in fields:
+        fields["criteria"] = list[dict[str, Any]]
+    if "regression_evidence" in fields and "regression_evidence" in source:
+        fields["regression_evidence"] = dict[str, Any]
+    if "enforce_project_responsibilities" in fields:
+        fields["enforce_project_responsibilities"] = bool
     # Structured fields are intentionally broad at this boundary because the
     # controller owns their domain-specific validation and normalization.
     for field in fields:

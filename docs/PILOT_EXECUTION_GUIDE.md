@@ -172,8 +172,8 @@ recorded. Provider metadata is never treated as verification evidence.
 
 Store the redacted JSON results, timestamps, commit SHA, configuration summary, and operator name in an
 approved evidence location outside the Git repository. Never store the values of secrets. Run the focused
-tests described in `docs/PHASE234_PILOT.md`, `docs/PHASE5_RELEASE_DEPLOYMENT.md`, and
-`docs/PHASE6_OPERATIONS.md`. If a local Windows ACL or tooling problem prevents a test, record it as an
+tests described in `API_GATE_CONTROL_GUIDE.md`, `E2E_TESTING.md`, and
+`PHASE6_OPERATIONS.md`. If a local Windows ACL or tooling problem prevents a test, record it as an
 environment limitation and run the authoritative suite in the Linux CI/Docker environment.
 
 ## 5. Configure the API-only gate policy
@@ -279,7 +279,8 @@ preview commit SHA. Resolve or explicitly disposition regression-gated defects. 
 the automated accessibility baseline can satisfy the Gate 5 accessibility check only when the policy and
 evidence explicitly state automated acceptance; manual review remains optional evidence.
 
-See `docs/PHASE234_PILOT.md` for the Penpot, preview, HAT, and accessibility workflow.
+See `FRONTEND_ROUTE_COVERAGE.md` and `E2E_TESTING.md` for the current Penpot, preview, HAT,
+accessibility, route, and browser-verification coverage.
 
 ### Gate 6 — Release and controlled deployment
 
@@ -292,7 +293,8 @@ approved deployment adapter with `execute=true` after the plan is approved. Chec
 health, retain the deployment diagnostics, and perform the documented rollback check when the pilot target
 permits it.
 
-The endpoint and payload contract are documented in `docs/PHASE5_RELEASE_DEPLOYMENT.md`.
+The endpoint and payload contract are documented in `API_GATE_CONTROL_GUIDE.md` and the generated
+OpenAPI contract at `/openapi.json`.
 
 ### Gate 7 — Hardening and exit review
 

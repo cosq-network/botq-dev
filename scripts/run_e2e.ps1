@@ -11,7 +11,10 @@ $env:BOTQ_E2E_ADMIN_EMAIL = if ($env:BOTQ_E2E_ADMIN_EMAIL) { $env:BOTQ_E2E_ADMIN
 $env:BOTQ_E2E_REVIEWER_EMAIL = if ($env:BOTQ_E2E_REVIEWER_EMAIL) { $env:BOTQ_E2E_REVIEWER_EMAIL } else { "reviewer@acme.local" }
 
 try {
-    docker compose @compose up -d --build db api worker proxy
+    # Ensure an interrupted prior run cannot leave a database volume with a
+    # password that differs from the newly generated E2E password.
+    docker compose @compose down -v --remove-orphans
+    docker compose @compose up -d --build db api worker frontend proxy
     docker compose @compose exec -T api flask db upgrade
     docker compose @compose exec -T api flask bootstrap --org-name E2E-Organization --slug $env:BOTQ_E2E_ORG --email $env:BOTQ_E2E_ADMIN_EMAIL --password $env:BOTQ_E2E_PASSWORD
     docker compose @compose exec -T api sh -c "PYTHONPATH=/srv/botq python scripts/seed_e2e.py"
@@ -34,6 +37,14 @@ try {
 
     python -m pytest e2e -q
     if ($LASTEXITCODE -ne 0) { throw "E2E pytest failed with exit code $LASTEXITCODE." }
+
+    Push-Location frontend
+    npm ci
+    npx playwright install chromium
+    $env:BOTQ_FRONTEND_URL = $env:BOTQ_E2E_BASE_URL
+    npm run test:e2e
+    if ($LASTEXITCODE -ne 0) { throw "Dockerized frontend browser suite failed with exit code $LASTEXITCODE." }
+    Pop-Location
 }
 catch {
     Write-Host "E2E failed; collecting API and proxy logs before teardown."

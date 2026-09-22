@@ -1,0 +1,14 @@
+.env
+.env.*
+.venv
+__pycache__
+*.py[cod]
+*.log
+.pytest_cache
+pytest-of-*
+phase*-test-temp
+secrets
+workspaces
+tests
+.git
+.gitignore

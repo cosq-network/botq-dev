@@ -15,6 +15,7 @@ from flask import Blueprint, current_app, jsonify, make_response
 
 from . import PUBLIC_ENDPOINTS
 from .dtos import dto_schema, request_dto_for
+from .response_contracts import DOMAIN_SCHEMAS, operation_response_schema
 
 docs_bp = Blueprint("docs", __name__)
 
@@ -52,6 +53,7 @@ def swagger_ui():
 def build_openapi_spec(app) -> dict:
     paths: dict[str, dict] = {}
     request_schemas: dict[str, dict] = {}
+    response_schemas: dict[str, dict] = {}
     for rule in sorted(app.url_map.iter_rules(), key=lambda item: item.rule):
         methods = sorted(_HTTP_METHODS.intersection(rule.methods or set()))
         if not methods or rule.endpoint.startswith("static"):
@@ -62,6 +64,9 @@ def build_openapi_spec(app) -> dict:
         view = app.view_functions.get(rule.endpoint)
         for method in methods:
             operation = _operation(app, rule, view, method)
+            response_name, response_schema = operation_response_schema(rule.endpoint, rule.rule, method)
+            operation["responses"]["200"] = _response("Successful response", response_name)
+            response_schemas[response_name] = response_schema
             if method in {"POST", "PUT", "PATCH"}:
                 model = request_dto_for(rule.endpoint, view)
                 request_schemas[model.__name__] = dto_schema(model)
@@ -125,6 +130,8 @@ def build_openapi_spec(app) -> dict:
                     },
                 },
                 **request_schemas,
+                **DOMAIN_SCHEMAS,
+                **response_schemas,
             },
         },
     }
@@ -137,7 +144,7 @@ def _operation(app, rule, view, method: str) -> dict:
     operation = {
         "operationId": endpoint.replace(".", "_"),
         "summary": summary,
-        "description": inspect.getdoc(function) if function else summary,
+        "description": (inspect.getdoc(function) or summary) if function else summary,
         "tags": [_tag_for(rule.rule)],
         "parameters": _path_parameters(rule.rule),
         "responses": {

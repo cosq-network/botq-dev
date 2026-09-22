@@ -1,6 +1,6 @@
 # botq Pilot Status
 
-**Status date:** 2026-09-20  
+**Status date:** 2026-09-22
 **Overall status:** Repository-side implementation, local technical exercises, and the API-only
 gate-control surface are substantially complete. Linux CI-equivalent checks, Dockerized API E2E,
 checkpoint recovery, concurrent load, Redis shared limiting, Prometheus/alert validation, retention,
@@ -42,6 +42,7 @@ not recorded in this document or committed to source control.
 | Pilot Flask application | Complete | Initialized and pushed to main as commit 31cbdb1 |
 | Pilot application tests | Complete | 8 pytest tests passed; Ruff and compile checks passed |
 | botq automated validation | Complete | Full backend pytest suite passed (`156 passed`); Ruff and compileall passed; Dockerized HTTP API E2E suite passed 10 tests |
+| botq React frontend validation | Complete repository-side | Generated OpenAPI/Orval artifacts, strict typecheck, lint, four Vitest tests, clean npm audit, production build, 27 Playwright tests, and major-screen axe checks passed; real provider mutations remain opt-in |
 | Pilot Docker runtime | Deployed locally | PostgreSQL migration applied; local preview health and rollback/restore health returned `ok` |
 | Gate 1 repository onboarding | Complete | botq project and repository record created; GitHub host fingerprint verified; deploy key authorized; botq connection test passed; `main` synchronized at commit `31cbdb1e31a120c0f90ce2e8c638957e2ba68aeb` |
 | Gate 2 requirements | Technical approval recorded | Baseline `aeab2014-bf03-4303-9afb-2ec6087fa684`, hash `729c6f5c...38548`, Heroku analysis completed, 19 proposals applied, separate reviewer approval recorded |

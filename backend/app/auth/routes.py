@@ -1,5 +1,4 @@
 import secrets
-from urllib.parse import urlencode
 
 from flask import Blueprint, current_app, g, redirect, request, session, url_for
 
@@ -27,6 +26,23 @@ def _providers_available():
 @bp.get("/providers")
 def list_providers():
     return ok(_providers_available())
+
+
+@bp.get("/csrf")
+def csrf():
+    """Issue a browser CSRF token; it is intentionally readable by the SPA."""
+    token = secrets.token_urlsafe(32)
+    response, status = ok({"csrf_token": token})
+    response.set_cookie(
+        "botq_csrf",
+        token,
+        secure=current_app.config["SESSION_COOKIE_SECURE"],
+        httponly=False,
+        samesite=current_app.config["SESSION_COOKIE_SAMESITE"],
+        path="/api/v1",
+        max_age=current_app.config["TOKEN_TTL_SECONDS"],
+    )
+    return response, status
 
 
 @bp.post("/login")
@@ -61,11 +77,14 @@ def login_local():
         organization_id=user.organization_id,
         metadata={"provider": "local"},
     )
-    return ok(
+    response, status = ok(
         {
-            "token": raw,
+            # CLI clients retain the bearer response. Browser clients opt in
+            # with X-Auth-Mode and receive only the HttpOnly session cookie.
+            **({} if request.headers.get("X-Auth-Mode") == "cookie" else {"token": raw}),
             "expires_in": current_app.config["TOKEN_TTL_SECONDS"],
             "user": _user_payload(user),
+            "scopes": sorted(scopes_for_user(user)),
             "organization": {
                 "id": str(user.organization.id),
                 "name": user.organization.name,
@@ -73,6 +92,25 @@ def login_local():
             },
         }
     )
+    response.set_cookie(
+        "botq_session",
+        raw,
+        secure=current_app.config["SESSION_COOKIE_SECURE"],
+        httponly=True,
+        samesite=current_app.config["SESSION_COOKIE_SAMESITE"],
+        path="/api/v1",
+        max_age=current_app.config["TOKEN_TTL_SECONDS"],
+    )
+    response.set_cookie(
+        "botq_csrf",
+        secrets.token_urlsafe(32),
+        secure=current_app.config["SESSION_COOKIE_SECURE"],
+        httponly=False,
+        samesite=current_app.config["SESSION_COOKIE_SAMESITE"],
+        path="/api/v1",
+        max_age=current_app.config["TOKEN_TTL_SECONDS"],
+    )
+    return response, status
 
 
 @bp.post("/logout")
@@ -92,7 +130,10 @@ def logout():
             target_type="user",
             organization_id=user.organization_id,
         )
-    return ok(message="Logged out")
+    response, status = ok(message="Logged out")
+    response.delete_cookie("botq_session", path="/api/v1")
+    response.delete_cookie("botq_csrf", path="/api/v1")
+    return response, status
 
 
 @bp.get("/me")
@@ -165,8 +206,26 @@ def oidc_callback():
     if not target.startswith("/") or target.startswith("//"):
         target = "/"
     target = target.split("#", 1)[0]
-    fragment = urlencode({"token": raw, "expires_in": current_app.config["TOKEN_TTL_SECONDS"]})
-    return redirect(f"{target}#{fragment}")
+    response = redirect(target)
+    response.set_cookie(
+        "botq_session",
+        raw,
+        secure=current_app.config["SESSION_COOKIE_SECURE"],
+        httponly=True,
+        samesite=current_app.config["SESSION_COOKIE_SAMESITE"],
+        path="/api/v1",
+        max_age=current_app.config["TOKEN_TTL_SECONDS"],
+    )
+    response.set_cookie(
+        "botq_csrf",
+        secrets.token_urlsafe(32),
+        secure=current_app.config["SESSION_COOKIE_SECURE"],
+        httponly=False,
+        samesite=current_app.config["SESSION_COOKIE_SAMESITE"],
+        path="/api/v1",
+        max_age=current_app.config["TOKEN_TTL_SECONDS"],
+    )
+    return response
 
 
 def _user_payload(user: User) -> dict:

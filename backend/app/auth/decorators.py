@@ -1,4 +1,5 @@
 import functools
+import hmac
 
 from flask import current_app, g, request
 
@@ -15,8 +16,16 @@ def _bearer_token() -> str | None:
     return None
 
 
+def _cookie_token() -> str | None:
+    return request.cookies.get("botq_session") or None
+
+
 def load_context() -> Token:
     raw = _bearer_token()
+    via_cookie = False
+    if not raw:
+        raw = _cookie_token()
+        via_cookie = bool(raw)
     if not raw:
         raise AuthenticationError("Missing bearer token")
     token = Token.query.filter_by(token_hash=hash_token(raw)).first()
@@ -31,8 +40,19 @@ def load_context() -> Token:
     g.user = user
     g.organization = org
     g.token = token
+    g.auth_via_cookie = via_cookie
     touch(token, current_app.config["TOKEN_ACTIVITY_UPDATE_SECONDS"])
     return token
+
+
+def validate_cookie_csrf() -> None:
+    """Require a matching, non-HttpOnly CSRF cookie/header for cookie auth."""
+    if not getattr(g, "auth_via_cookie", False):
+        return
+    expected = request.cookies.get("botq_csrf", "")
+    provided = request.headers.get("X-CSRF-Token", "")
+    if not expected or not provided or not hmac.compare_digest(expected, provided):
+        raise AuthenticationError("CSRF validation failed")
 
 
 def require_auth(f):

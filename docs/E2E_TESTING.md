@@ -48,7 +48,32 @@ success path remains covered by `scripts/validate_git.ps1` and the optional
 
 External provider success paths are intentionally not part of the default E2E
 run. They require real credentials and a non-production endpoint. Provider
-contract tests and the pilot runbook cover those opt-in checks.
+adapter integration tests in `backend/tests/test_provider_integrations.py` cover request,
+authentication, response, redaction, rollback, and schema-constrained inference behavior with
+deterministic HTTP mocks. A safe connectivity probe is available through the opt-in
+`BOTQ_EXTERNAL_PROVIDER_URL` CI secret; it does not perform provider mutations.
+
+## Frontend verification
+
+The Docker runner also installs the frontend from the lockfile and executes the production-like
+SPA behind the same Nginx origin. The Playwright suite covers unauthenticated redirects, login
+surface labels, authenticated domain routes, nested detail routes, and axe checks on the major
+screens. The current verified run completed 27 browser tests with no failures.
+
+Frontend dependency generation and checks are also available locally:
+
+```powershell
+Push-Location frontend
+npm ci
+npm run generate:api
+npm run generate:hooks
+npm run typecheck
+npm run lint
+npm test
+npm run audit
+npm run build
+Pop-Location
+```
 
 ## CI
 

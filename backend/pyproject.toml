@@ -13,4 +13,5 @@ ignore = ["E501"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q --tb=short"
+markers = ["external: opt-in safe checks against a configured external provider"]
 filterwarnings = ["ignore::DeprecationWarning"]
