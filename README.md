@@ -47,7 +47,7 @@ docker compose exec api flask bootstrap \
 PowerShell:
 
 ```powershell
-Copy-Item backend/.env.example backend/.env
+if (!(Test-Path backend/.env)) { Copy-Item backend/.env.example backend/.env }
 $env:POSTGRES_PASSWORD = "replace-with-a-long-random-password"
 docker compose up -d --build
 docker compose exec api flask db upgrade
@@ -55,9 +55,64 @@ docker compose exec api flask bootstrap --org-name "Acme" --slug "acme" `
   --email "admin@acme.local" --password "ChangeMe123!"
 ```
 
-Open the SPA at <http://localhost:8884>. Health endpoints are `/health/live` and `/health/ready`;
+Open the SPA at <http://localhost:8884> and sign in with the bootstrap account:
+
+```text
+Email: admin@acme.local
+Password: ChangeMe123!
+Organization: acme
+```
+
+The local defaults are offline-safe:
+
+```env
+REQUIREMENT_ANALYSIS_PROVIDER=rules
+AGENT_IMPLEMENTATION_PROVIDER=disabled
+```
+
+Requirement analysis uses the built-in rules engine and agent implementation is disabled, so no
+external inference service or API key is required. Health endpoints are `/health/live` and
+`/health/ready`;
 the API contract is available at `/openapi.json` and interactive API documentation at `/docs`.
 Never use the example credentials or development secrets in production.
+
+To enable an external provider for local testing, edit `backend/.env`. For example, an
+OpenAI-compatible gateway uses:
+
+```env
+REQUIREMENT_ANALYSIS_PROVIDER=openai_compatible
+AGENT_IMPLEMENTATION_PROVIDER=openai_compatible
+OPENAI_COMPATIBLE_BASE_URL=https://your-gateway.example
+OPENAI_COMPATIBLE_API_KEY=your-api-key
+OPENAI_COMPATIBLE_MODEL=your-model
+OPENAI_COMPATIBLE_MAX_TOKENS=4096
+```
+
+Provider lists are ordered fallback chains, for example:
+
+```env
+REQUIREMENT_ANALYSIS_PROVIDER=rules,openai_compatible,heroku
+AGENT_IMPLEMENTATION_PROVIDER=openai_compatible,runpod
+```
+
+Validate the settings without making a network request, then recreate the API and worker:
+
+```powershell
+$env:PYTHONPATH = "backend"
+python scripts/validate_provider_config.py --json
+docker compose up -d --force-recreate api worker
+```
+
+Provider endpoints must use HTTPS and pass BotQ's private-network and metadata-service checks.
+
+Useful local operations:
+
+```powershell
+docker compose ps
+docker compose logs -f api
+docker compose logs -f worker
+docker compose down
+```
 
 For production-like Compose deployment, inject the required secrets and provider settings through
 the deployment environment and apply the production overlay:
