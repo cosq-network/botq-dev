@@ -23,7 +23,7 @@ from app.utils import new_uuid, utcnow
 
 
 def main() -> int:
-    output = Path(".pilot-evidence/retention-exercise.json")
+    output = Path(".evidence/retention-exercise.json")
     app = create_app()
     app.config.update(
         SQLALCHEMY_DATABASE_URI="sqlite://",
@@ -37,7 +37,7 @@ def main() -> int:
         db.create_all()
         org = create_organization("Retention Evidence", slug="retention-evidence")
         project = Project(
-            id=new_uuid(), organization_id=org.id, name="Retention Pilot", key="RET",
+            id=new_uuid(), organization_id=org.id, name="Retention exercise", key="RET",
         )
         db.session.add(project)
         db.session.flush()

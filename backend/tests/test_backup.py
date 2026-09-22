@@ -27,9 +27,9 @@ def _seed(app):
     )
     project = Project(
         organization_id=org.id,
-        name="Pilot",
-        key="pilot",
-        description="pilot repo",
+        name="EXAMPLE",
+        key="EXAMPLE",
+        description="EXAMPLE repo",
         default_branch="main",
     )
     secret = Secret(

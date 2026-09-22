@@ -23,8 +23,6 @@ node_modules/
 dist/
 build/
 .PHONY
-.pilot-evidence/
-.pilot-*/
+.evidence/
 .gate4-verify-*/
 backend/instance/
-pilot-botq-dev/

@@ -4,7 +4,7 @@ This is the repository-side runbook baseline. Production owners must connect
 the alert rules in `ops/alerts.yml` to the selected metrics collector and
 record the resulting incident and recovery evidence before Gate 7.
 
-For the current BotQ Pilot, the selected target is local Docker Compose with a
+For local development, the selected target is Docker Compose with a
 99.5% availability target, 24-hour RPO, and 8-hour RTO. Local recovery and
 readiness exercises have supporting evidence; production-scale load, live alert
 delivery, and final Gate 7 readiness decisions must be recorded through the gate
@@ -54,7 +54,7 @@ restore.
 ## Gate 7 API evidence
 
 Submit operations evidence to Gate 7 with explicit source, command, timestamp,
-result, and content hash. For the API-only pilot, the automation principal may
+result, and content hash. For API automation, the automation principal may
 record the operations-readiness decision only after mandatory checks are passed,
 waived with reason/expiry, or marked not applicable by policy. Missing checks
 remain blocked in `/api/v1/projects/{project_id}/gates/summary`.

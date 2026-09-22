@@ -69,7 +69,7 @@ def test_mockup_preview_and_acceptance_gate(client, org, auth_headers):
     )
     reviewer = _login(client, "phase4-reviewer@test.local", org.slug)
     project = client.post(
-        "/api/v1/projects", headers=admin, json={"name": "UI Pilot", "key": "uipil"}
+        "/api/v1/projects", headers=admin, json={"name": "UI EXAMPLE", "key": "uipil"}
     ).get_json()["data"]
     architecture = _setup_approved_architecture(client, admin, reviewer, project["id"])
 
@@ -140,7 +140,7 @@ def test_mockup_preview_and_acceptance_gate(client, org, auth_headers):
 def test_defect_cannot_close_without_regression_evidence(client, auth_headers):
     admin = auth_headers()
     project = client.post(
-        "/api/v1/projects", headers=admin, json={"name": "Defect Pilot", "key": "defp"}
+        "/api/v1/projects", headers=admin, json={"name": "Defect EXAMPLE", "key": "defp"}
     ).get_json()["data"]
     defect = client.post(
         "/api/v1/design/defects",

@@ -61,7 +61,7 @@ def _project(client, headers, key):
 def test_approve_flow_binds_to_version_and_hash(client, auth_headers, app, org):
     admin = auth_headers()
     project = _project(client, admin, "appr1")
-    baseline = _baseline(client, admin, project["id"], title="Pilot Baseline")
+    baseline = _baseline(client, admin, project["id"], title="EXAMPLE Baseline")
     reviewer = _make_reviewer(org)
     reviewer_headers = {"Authorization": f"Bearer {_login(client, 'owner@test.local', org.slug)}"}
 
@@ -193,14 +193,14 @@ def test_waive_requires_reason_and_expiry(client, auth_headers, org):
     no_expiry = client.post(
         f"/api/v1/requirements/baselines/{baseline['id']}/waive",
         headers=reviewer_headers,
-        json={"reason": "pilot exception"},
+        json={"reason": "EXAMPLE exception"},
     )
     assert no_expiry.status_code == 422
 
     waived = client.post(
         f"/api/v1/requirements/baselines/{baseline['id']}/waive",
         headers=reviewer_headers,
-        json={"reason": "pilot exception", "expires_at": "2030-01-01T00:00:00"},
+        json={"reason": "EXAMPLE exception", "expires_at": "2030-01-01T00:00:00"},
     )
     assert waived.status_code == 200
     assert waived.get_json()["data"]["status"] == "waived"

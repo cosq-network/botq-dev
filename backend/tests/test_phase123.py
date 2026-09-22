@@ -23,7 +23,7 @@ def _baseline(client, headers, project_id):
     baseline = client.post(
         "/api/v1/requirements/baselines",
         headers=headers,
-        json={"project_id": project_id, "title": "Pilot Intake", "content": content},
+        json={"project_id": project_id, "title": "EXAMPLE Intake", "content": content},
     ).get_json()["data"]
     client.post(f"/api/v1/requirements/baselines/{baseline['id']}/submit", headers=headers)
     return baseline
@@ -47,7 +47,7 @@ def _architecture(client, headers, project_id, baseline_id):
         json={
             "project_id": project_id,
             "source_baseline_id": baseline_id,
-            "title": "Pilot Architecture",
+            "title": "EXAMPLE Architecture",
             "content": content,
         },
     ).get_json()["data"]
@@ -68,7 +68,7 @@ def _plan(client, headers, project_id, architecture_id):
         json={
             "project_id": project_id,
             "source_architecture_id": architecture_id,
-            "title": "Pilot Plan",
+            "title": "EXAMPLE Plan",
             "content": content,
         },
     ).get_json()["data"]
@@ -83,7 +83,7 @@ def test_architecture_and_plan_gates_are_version_bound(client, org, auth_headers
     project = client.post(
         "/api/v1/projects",
         headers=admin,
-        json={"name": "Pilot", "key": "p123"},
+        json={"name": "EXAMPLE", "key": "p123"},
     ).get_json()["data"]
     baseline = _baseline(client, admin, project["id"])
     assert (
@@ -114,7 +114,7 @@ def test_architecture_and_plan_gates_are_version_bound(client, org, auth_headers
     run = client.post(
         "/api/v1/agent-runs",
         headers=admin,
-        json={"plan_id": plan["id"], "objective": "Implement pilot", "writable_paths": ["backend"]},
+        json={"plan_id": plan["id"], "objective": "Implement EXAMPLE", "writable_paths": ["backend"]},
     )
     assert run.status_code == 201
     assert run.get_json()["data"]["plan_hash"] == plan["current_hash"]
@@ -123,7 +123,7 @@ def test_architecture_and_plan_gates_are_version_bound(client, org, auth_headers
     change_set = client.post(
         f"/api/v1/agent-runs/{run_id}/change-sets",
         headers=admin,
-        json={"branch": "agent/pilot", "base_commit": "abc123"},
+        json={"branch": "agent/EXAMPLE", "base_commit": "abc123"},
     )
     assert change_set.status_code == 201
     file_response = client.post(
@@ -140,7 +140,7 @@ def test_run_boundary_rejects_unapproved_plan_and_out_of_scope_paths(client, aut
     project = client.post(
         "/api/v1/projects",
         headers=admin,
-        json={"name": "Blocked Pilot", "key": "blockp"},
+        json={"name": "Blocked EXAMPLE", "key": "blockp"},
     ).get_json()["data"]
     response = client.post(
         "/api/v1/agent-runs",
@@ -156,7 +156,7 @@ def test_traceability_requires_same_project_and_searches_artifacts(client, auth_
     project = client.post(
         "/api/v1/projects",
         headers=headers,
-        json={"name": "Trace Pilot", "key": "tracep"},
+        json={"name": "Trace EXAMPLE", "key": "tracep"},
     ).get_json()["data"]
     baseline = _baseline(client, headers, project["id"])
     link = client.post(

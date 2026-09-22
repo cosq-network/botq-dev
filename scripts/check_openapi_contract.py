@@ -12,7 +12,6 @@ os.environ.setdefault("BOOTSTRAP_TOKEN", "contract-check-bootstrap")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
 from app import create_app  # noqa: E402
-from app.api.dtos import request_dto_for  # noqa: E402
 
 
 def main() -> int:

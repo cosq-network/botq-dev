@@ -1,5 +1,5 @@
 def create_project_payload(name="Acme", key="acme"):
-    return {"name": name, "key": key, "description": "pilot repo", "default_branch": "main"}
+    return {"name": name, "key": key, "description": "EXAMPLE repo", "default_branch": "main"}
 
 
 def _create(client, headers, **overrides):

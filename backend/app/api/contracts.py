@@ -54,7 +54,6 @@ EXPLICIT_FIELDS: dict[str, dict[str, type]] = {
         "auto_sync_evidence": bool,
     },
     "api.orgs.replace_org_user_roles": {"roles": list[str]},
-    "api.planning.approve_change_set": {},
     "api.projects.archive_project": {},
     "api.gates.update_project_gate_policy": {
         "approval_mode": str,

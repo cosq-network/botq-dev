@@ -33,7 +33,7 @@ def main() -> int:
     )
     manifest = {
         "deployment_id": args.deployment_id,
-        "environment": "local-pilot",
+        "environment": "local",
         "release": {"version": "local-compose-evidence"},
         "rollback": {"compose_files": args.rollback_compose_file},
     }

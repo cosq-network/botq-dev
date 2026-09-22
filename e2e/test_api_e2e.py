@@ -5,7 +5,7 @@ import pytest
 import requests
 
 ARCHITECTURE_CONTENT = {
-    "context": {"goal": "deliver an auditable pilot"},
+    "context": {"goal": "deliver an auditable EXAMPLE"},
     "components": ["api", "worker"],
     "data": ["postgres"],
     "integrations": ["git", "inference"],
@@ -17,7 +17,7 @@ ARCHITECTURE_CONTENT = {
 }
 
 PLAN_CONTENT = {
-    "steps": [{"id": "implement", "title": "Implement pilot", "validation": "pytest"}],
+    "steps": [{"id": "implement", "title": "Implement EXAMPLE", "validation": "pytest"}],
     "environment_manifest": {},
     "budget": {"max_minutes": 10, "max_cost": 1},
     "permissions": {"tools": ["read", "write"], "paths": ["backend"]},
@@ -28,7 +28,7 @@ PLAN_CONTENT = {
 
 def _content(suffix):
     return {
-        "goals": [f"Deliver the E2E pilot {suffix}"],
+        "goals": [f"Deliver the E2E EXAMPLE {suffix}"],
         "functional_specifications": [
             "The API must return a successful health response"
         ],
@@ -44,7 +44,7 @@ def workflow(admin, reviewer, unique_suffix):
     project = admin.data(
         "POST",
         "/api/v1/projects",
-        json={"name": f"E2E Pilot {unique_suffix}", "key": f"e2e-{unique_suffix}"},
+        json={"name": f"E2E EXAMPLE {unique_suffix}", "key": f"e2e-{unique_suffix}"},
     )
     project_id = project["id"]
 
@@ -346,7 +346,7 @@ def test_requirement_decision_version_finding_and_direct_approval_apis(
         json={
             "content": {
                 **versioned["content"],
-                "goals": [f"Deliver the revised E2E pilot {unique_suffix}"],
+                "goals": [f"Deliver the revised E2E EXAMPLE {unique_suffix}"],
             },
             "change_summary": "E2E version transition",
         },
@@ -370,7 +370,7 @@ def test_requirement_decision_version_finding_and_direct_approval_apis(
         decision_payload = {}
         if action == "waive":
             decision_payload = {
-                "reason": "Accepted as a documented pilot exception",
+                "reason": "Accepted as a documented EXAMPLE exception",
                 "expires_at": (
                     datetime.now(UTC) + timedelta(days=1)
                 ).isoformat(),
@@ -437,7 +437,7 @@ def test_requirement_decision_version_finding_and_direct_approval_apis(
         f"/api/v1/requirements/analyses/{finding_analysis['id']}/findings/{finding['id']}/resolve",
         json={
             "status": "resolved",
-            "reason": "Addressed in the pilot acceptance wording",
+            "reason": "Addressed in the EXAMPLE acceptance wording",
         },
     )
     assert resolved["status"] == "resolved"
@@ -662,7 +662,7 @@ def test_api_only_lifecycle_closes_all_seven_gates(admin, e2e_base_url, unique_s
     project = admin.data(
         "POST",
         "/api/v1/projects",
-        json={"name": f"API Gate Pilot {unique_suffix}", "key": f"gate-{unique_suffix}"},
+        json={"name": f"API Gate EXAMPLE {unique_suffix}", "key": f"gate-{unique_suffix}"},
     )
     project_id = project["id"]
     admin.data(

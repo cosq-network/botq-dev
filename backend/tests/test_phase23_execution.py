@@ -110,7 +110,7 @@ def test_managed_executor_preserves_provider_usage_and_cost(monkeypatch):
             "choices": [
                 {
                     "message": {
-                        "content": '{"changes":[{"path":"tests/test_pilot.py","action":"add","diff":"@@"}],"self_review":{"result":"reviewed"}}'
+                        "content": '{"changes":[{"path":"tests/test_EXAMPLE.py","action":"add","diff":"@@"}],"self_review":{"result":"reviewed"}}'
                     }
                 }
             ],
@@ -182,21 +182,21 @@ def test_checkpoint_recovery_context_is_preserved_for_provider_execution():
     assert '"resume_checkpoint": {"sequence": 3, "step": "verify"}' in prompt
 
 
-class PilotExecutor:
+class EXAMPLEExecutor:
     seen_checkpoints: list[dict | None] = []
 
     def execute(self, run, plan, checkpoint=None):
         self.seen_checkpoints.append(checkpoint)
         return ExecutionResult(
-            provider="pilot-fixture",
+            provider="EXAMPLE-fixture",
             changes=[
                 GeneratedChange(
-                    path="backend/pilot.py",
+                    path="backend/EXAMPLE.py",
                     action="add",
-                    diff="--- /dev/null\n+++ b/backend/pilot.py\n@@\n+def pilot():\n+    return True\n",
+                    diff="--- /dev/null\n+++ b/backend/EXAMPLE.py\n@@\n+def EXAMPLE():\n+    return True\n",
                 )
             ],
-            self_review={"result": "Reviewed against the approved pilot plan."},
+            self_review={"result": "Reviewed against the approved EXAMPLE plan."},
             evidence={"commands": [], "fixture": True},
         )
 
@@ -222,7 +222,7 @@ def test_leased_worker_persists_only_a_reviewable_draft_change_set(app, client, 
     }
     admin = auth_headers()
     project = client.post(
-        "/api/v1/projects", headers=admin, json={"name": "Worker Pilot", "key": "wpilot"}
+        "/api/v1/projects", headers=admin, json={"name": "Worker EXAMPLE", "key": "wEXAMPLE"}
     ).get_json()["data"]
     baseline = client.post(
         "/api/v1/requirements/baselines",
@@ -232,9 +232,9 @@ def test_leased_worker_persists_only_a_reviewable_draft_change_set(app, client, 
             "title": "Worker Intake",
             "content": {
                 "goals": ["Deliver a reviewable change"],
-                "functional_specifications": ["The pilot function returns true"],
+                "functional_specifications": ["The EXAMPLE function returns true"],
                 "constraints": [],
-                "acceptance_expectations": ["The pilot function returns true"],
+                "acceptance_expectations": ["The EXAMPLE function returns true"],
                 "attachments": [],
                 "repository_references": [],
             },
@@ -282,7 +282,7 @@ def test_leased_worker_persists_only_a_reviewable_draft_change_set(app, client, 
             "source_architecture_id": architecture["id"],
             "title": "Worker Plan",
             "content": {
-                "steps": [{"id": "pilot", "title": "Implement", "validation": "pytest"}],
+                "steps": [{"id": "EXAMPLE", "title": "Implement", "validation": "pytest"}],
                 "environment_manifest": {},
                 "budget": {"max_minutes": 10, "max_cost": 1},
                 "permissions": {"tools": ["read"], "paths": ["backend"]},
@@ -298,10 +298,10 @@ def test_leased_worker_persists_only_a_reviewable_draft_change_set(app, client, 
         headers=admin,
         json={
             "plan_id": plan["id"],
-            "objective": "Implement the pilot function",
+            "objective": "Implement the EXAMPLE function",
             "allowed_tools": ["read"],
             "writable_paths": ["backend"],
-            "environment": {"branch": "agent/pilot", "base_commit": "abc123"},
+            "environment": {"branch": "agent/EXAMPLE", "base_commit": "abc123"},
         },
     ).get_json()["data"]
     client.post(f"/api/v1/agent-runs/{run['id']}/start", headers=admin)
@@ -327,15 +327,15 @@ def test_leased_worker_persists_only_a_reviewable_draft_change_set(app, client, 
         claimed.lease_expires_at = utcnow() - timedelta(seconds=1)
         db.session.commit()
 
-    PilotExecutor.seen_checkpoints = []
-    app.config["AGENT_RUN_EXECUTOR_FACTORY"] = lambda _app, _run: PilotExecutor()
+    EXAMPLEExecutor.seen_checkpoints = []
+    app.config["AGENT_RUN_EXECUTOR_FACTORY"] = lambda _app, _run: EXAMPLEExecutor()
 
     assert AgentRunWorker(app, worker_id="recovery-worker").process_once() is True
     change_set = ChangeSet.query.filter_by(run_id=uuid.UUID(run["id"])).one()
     assert change_set.status == "draft"
-    assert change_set.branch == "agent/pilot"
-    assert [item.path for item in change_set.files] == ["backend/pilot.py"]
+    assert change_set.branch == "agent/EXAMPLE"
+    assert [item.path for item in change_set.files] == ["backend/EXAMPLE.py"]
     assert change_set.self_review["result"]
-    assert PilotExecutor.seen_checkpoints == [
+    assert EXAMPLEExecutor.seen_checkpoints == [
         {"sequence": 1, "step": "provider-request-created"}
     ]

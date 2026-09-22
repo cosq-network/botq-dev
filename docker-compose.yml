@@ -112,18 +112,6 @@ services:
       retries: 10
       start_period: 5s
 
-  # Throwaway real SSH git remote for the Phase 1 pilot-clone validation.
-  # Gated behind the "git-validation" profile so it never starts in normal use.
-  git-fixture:
-    image: botq/git-fixture:dev
-    build:
-      context: ./dev/git-fixture
-    profiles: ["git-validation"]
-    networks:
-      - internal
-    expose:
-      - "22"
-
 volumes:
   pgdata:
   gitkeys:

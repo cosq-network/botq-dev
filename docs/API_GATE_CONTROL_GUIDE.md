@@ -16,7 +16,7 @@ botq validates authorization, state, hashes, and segregation of duties
 botq records the decision and audit event
 ```
 
-The API-only pilot uses the same audit/evidence boundary, but the decision-maker is a dedicated
+The API-only controlled workflow uses the same audit/evidence boundary, but the decision-maker is a dedicated
 automation principal selected by project gate policy:
 
 ```text
@@ -82,10 +82,10 @@ Supported approval modes:
 | Mode | Meaning |
 | --- | --- |
 | `human_api` | Assigned human users record API decisions. |
-| `api_automation` | A dedicated automation principal records explicit API decisions. This is the pilot mode. |
+| `api_automation` | A dedicated automation principal records explicit API decisions for controlled automation. |
 | `disabled` | Evidence-only closure; use only when deliberately configured. |
 
-For this pilot, configure `api_automation`, create a dedicated automation user with the
+For a controlled automation workflow, configure `api_automation`, create a dedicated automation user with the
 `gate_automation` role, assign only the project responsibilities needed for the selected gates, and
 record every decision through `auto-approve` or
 `decisions`. The automation principal is still a normal organization user for audit and tenant
@@ -103,7 +103,7 @@ curl -X POST "$BOTQ_URL/api/v1/organizations/me/users" \
   -d '{"email":"qa@example.test","display_name":"QA Reviewer", \
        "password":"<temporary-password-at-least-12-chars>","roles":["qa_engineer"]}'
 
-# Create a least-privilege automation principal for the API-only pilot.
+# Create a least-privilege automation principal for controlled API automation.
 curl -X POST "$BOTQ_URL/api/v1/organizations/me/users" \
   -H "Authorization: Bearer $CONFIG_MANAGER_TOKEN" \
   -H "Content-Type: application/json" \
@@ -176,7 +176,7 @@ curl -X POST "$BOTQ_URL/api/v1/projects/$PROJECT_ID/gates/4/evidence" \
        "evidence":{"change_set_hash":"<hash>","result":"passed"}}'
 ```
 
-For the API-only pilot, the automation principal records approvals explicitly:
+For controlled API automation, the automation principal records approvals explicitly:
 
 ```bash
 curl -X POST "$BOTQ_URL/api/v1/projects/$PROJECT_ID/gates/4/auto-approve" \
@@ -187,12 +187,12 @@ curl -X POST "$BOTQ_URL/api/v1/projects/$PROJECT_ID/gates/4/auto-approve" \
 ```
 
 The same sequence can be run end to end with `scripts/run_api_gate_lifecycle.py`. Supply a real
-evidence manifest for pilot evidence; `--synthetic-evidence` exists only for local API contract tests:
+evidence manifest for controlled evidence; `--synthetic-evidence` exists only for local API contract tests:
 
 ```bash
 python scripts/run_api_gate_lifecycle.py \
   --project-id "$PROJECT_ID" \
-  --evidence-manifest .pilot-evidence/gates.json
+  --evidence-manifest .evidence/gates.json
 ```
 
 The manifest shape is:
@@ -317,7 +317,7 @@ attach billing evidence if policy requires it.
 ## Gate 5 — UI/UX and acceptance
 
 Authorized caller under policy: record HAT/accessibility/acceptance evidence, each criterion and
-defect, and decide whether acceptance is complete. For the API-only pilot, automated accessibility can
+defect, and decide whether acceptance is complete. For controlled API automation, automated accessibility can
 satisfy Gate 5 only when the policy and evidence explicitly state that automated acceptance was chosen.
 
 ```bash
@@ -331,7 +331,7 @@ curl -X POST "$BOTQ_URL/api/v1/design/acceptance/sessions/$SESSION_ID/complete" 
 ```
 
 Use the defect APIs to record reproduction steps and regression evidence. Penpot and external preview are
-optional for this local-only pilot; record that scope decision through the approved project decision
+optional for this local-only workflow; record that scope decision through the approved project decision
 process or gate evidence.
 
 ## Gate 6 — release, deployment, and rollback
@@ -368,7 +368,7 @@ curl -X POST "$BOTQ_URL/api/v1/deployments/$DEPLOYMENT_ID/rollback" \
   -H "Authorization: Bearer $RELEASE_MANAGER_TOKEN"
 ```
 
-For this pilot, configure `LOCAL_COMPOSE_FILE`, `LOCAL_COMPOSE_ROLLBACK_FILE`, and
+For this controlled deployment workflow, configure `LOCAL_COMPOSE_FILE`, `LOCAL_COMPOSE_ROLLBACK_FILE`, and
 `LOCAL_DEPLOYMENT_HEALTH_URL` through ignored `backend/.env`. A restart is not a rollback; the
 rollback definition must identify the previous deployable release.
 
@@ -389,6 +389,6 @@ Use `backend/.env` for local secrets or the deployment platform’s secret manag
 `backend/.env.example` as the template. Never commit `.env`, paste keys into chat, or place secrets in
 prompts, screenshots, evidence JSON, or release records.
 
-The pilot is complete when every gate has technical evidence and the required policy decision has been
+The controlled workflow is complete when every gate has technical evidence and the required policy decision has been
 submitted through an authorized client and recorded by botq against the correct immutable version/hash.
 Accountability lives in the policy-selected principal; API calls are the recording mechanism.

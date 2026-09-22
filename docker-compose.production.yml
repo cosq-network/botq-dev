@@ -1,0 +1,63 @@
+services:
+  db:
+    restart: unless-stopped
+    ports: !reset []
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+
+  api:
+    restart: unless-stopped
+    env_file: !reset []
+    environment:
+      APP_NAME: ${APP_NAME:-botq}
+      ENVIRONMENT: production
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL must be set}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set}
+      AUDIT_SECRET: ${AUDIT_SECRET:?AUDIT_SECRET must be set}
+      SECRET_ENCRYPTION_KEY: ${SECRET_ENCRYPTION_KEY:?SECRET_ENCRYPTION_KEY must be set}
+      BOOTSTRAP_ENABLED: "false"
+      AUTH_MODE: oidc
+      LOCAL_AUTH_ENABLED: ${LOCAL_AUTH_ENABLED:-false}
+      OIDC_ENABLED: ${OIDC_ENABLED:-true}
+      OIDC_ISSUER: ${OIDC_ISSUER:?OIDC_ISSUER must be set}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:?OIDC_CLIENT_ID must be set}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?OIDC_CLIENT_SECRET must be set}
+      OIDC_SCOPES: ${OIDC_SCOPES:-openid profile email}
+      OIDC_SUCCESS_REDIRECT_URI: ${OIDC_SUCCESS_REDIRECT_URI:-/}
+      RATE_LIMIT_ENABLED: "true"
+      RATE_LIMIT_BACKEND: ${RATE_LIMIT_BACKEND:-redis}
+      REDIS_URL: ${REDIS_URL:?REDIS_URL must be set when using Redis rate limiting}
+      GIT_KEY_DIR: /srv/botq/secrets/git
+      GIT_KNOWN_HOSTS: /srv/botq/secrets/git/known_hosts
+      SANDBOX_WORKSPACE_DIR: /srv/botq/workspaces
+      DOCKER_HOST: tcp://docker-socket-proxy:2375
+    security_opt:
+      - no-new-privileges:true
+
+  worker:
+    restart: unless-stopped
+    env_file: !reset []
+    environment:
+      APP_NAME: ${APP_NAME:-botq}
+      ENVIRONMENT: production
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL must be set}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set}
+      AUDIT_SECRET: ${AUDIT_SECRET:?AUDIT_SECRET must be set}
+      SECRET_ENCRYPTION_KEY: ${SECRET_ENCRYPTION_KEY:?SECRET_ENCRYPTION_KEY must be set}
+      AGENT_IMPLEMENTATION_PROVIDER: ${AGENT_IMPLEMENTATION_PROVIDER:-disabled}
+      GIT_KEY_DIR: /srv/botq/secrets/git
+      GIT_KNOWN_HOSTS: /srv/botq/secrets/git/known_hosts
+      SANDBOX_WORKSPACE_DIR: /srv/botq/workspaces
+    security_opt:
+      - no-new-privileges:true
+
+  docker-socket-proxy:
+    restart: unless-stopped
+
+  frontend:
+    restart: unless-stopped
+
+  proxy:
+    restart: unless-stopped
+    ports:
+      - "${BOTQ_PORT:-8884}:80"

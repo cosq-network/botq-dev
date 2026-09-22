@@ -3,7 +3,7 @@
 This client does not create evidence. It submits evidence supplied by a manifest,
 evaluates each gate, records explicit API automation approval decisions, and
 closes gates sequentially. Use --synthetic-evidence only for local API contract
-testing; do not use it as pilot or production evidence.
+testing; do not use it as production evidence.
 """
 
 from __future__ import annotations
@@ -157,7 +157,7 @@ def run(args: argparse.Namespace) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default=os.environ.get("BOTQ_URL", "http://127.0.0.1:8886"))
-    parser.add_argument("--organization", default=os.environ.get("BOTQ_ORGANIZATION", "pilot"))
+    parser.add_argument("--organization", default=os.environ.get("BOTQ_ORGANIZATION", "acme"))
     parser.add_argument("--project-id", default=os.environ.get("BOTQ_PROJECT_ID"), required=False)
     parser.add_argument("--admin-email", default=os.environ.get("BOTQ_ADMIN_EMAIL"))
     parser.add_argument("--admin-password", default=os.environ.get("BOTQ_ADMIN_PASSWORD"))

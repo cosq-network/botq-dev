@@ -16,7 +16,7 @@ def _adapter(tmp_path, backend=None):
 
 @pytest.fixture()
 def project(org):
-    p = Project(name="Pilot", key="pil", organization_id=org.id)
+    p = Project(name="EXAMPLE", key="pil", organization_id=org.id)
     db.session.add(p)
     db.session.commit()
     return p

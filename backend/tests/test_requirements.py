@@ -14,13 +14,13 @@ def _content(**overrides):
         "constraints": ["Runs on a single VPS"],
         "acceptance_expectations": ["Baseline approval gate works"],
         "attachments": [{"name": "intake.pdf", "url": "https://example.com/intake.pdf"}],
-        "repository_references": [{"url": "git@github.com:acme/pilot.git", "ref": "main"}],
+        "repository_references": [{"url": "git@github.com:acme/EXAMPLE.git", "ref": "main"}],
     }
     content.update(overrides)
     return content
 
 
-def _create_project(client, headers, key="pilot"):
+def _create_project(client, headers, key="EXAMPLE"):
     return client.post(
         "/api/v1/projects",
         headers=headers,
@@ -29,7 +29,7 @@ def _create_project(client, headers, key="pilot"):
 
 
 def _create_baseline(client, headers, project_id, **overrides):
-    payload = {"project_id": project_id, "title": "Pilot Intake", "content": _content()}
+    payload = {"project_id": project_id, "title": "EXAMPLE Intake", "content": _content()}
     payload.update(overrides)
     return client.post("/api/v1/requirements/baselines", headers=headers, json=payload)
 

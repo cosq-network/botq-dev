@@ -61,7 +61,7 @@ DOMAIN_SCHEMAS: dict[str, dict[str, Any]] = {
 }
 
 ENTITY_BY_ENDPOINT = {
-    "project": "ProjectResponse", "projects": "ProjectResponse", "baseline": "BaselineResponse", "baseline": "BaselineResponse",
+    "project": "ProjectResponse", "projects": "ProjectResponse", "baseline": "BaselineResponse",
     "analysis": "AnalysisResponse", "finding": "FindingResponse", "work_item": "WorkItemResponse", "architecture": "ArtifactResponse", "plan": "ArtifactResponse", "artifact": "ArtifactResponse", "agent_run": "AgentRunResponse", "change_set": "ChangeSetResponse", "mockup": "MockupResponse", "preview": "PreviewResponse", "acceptance": "AcceptanceSessionResponse", "defect": "DefectResponse", "gate": "GateResponse", "approval": "ApprovalResponse", "release": "ReleaseResponse", "deployment_plan": "DeploymentPlanResponse", "deployment": "DeploymentResponse", "repository": "RepositoryResponse", "secret": "SecretResponse", "responsibility": "ResponsibilityResponse", "trace": "TraceLinkResponse", "health": "HealthResponse", "audit": "AuditEventResponse", "user": "UserResponse", "organization": "OrganizationResponse",
 }
 

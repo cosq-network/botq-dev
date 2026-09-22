@@ -36,18 +36,18 @@ def test_deployment_webhook_requires_https_and_credentials():
         )
 
 
-def test_local_compose_adapter_accepts_pilot_compose_stack():
+def test_local_compose_adapter_accepts_EXAMPLE_compose_stack():
     adapter = LocalComposeDeploymentAdapter(
         {
-            "LOCAL_COMPOSE_FILE": "docker-compose.yml,docker-compose.pilot.yml",
-            "LOCAL_COMPOSE_PROJECT": "botq-pilot-test",
+            "LOCAL_COMPOSE_FILE": "docker-compose.yml,docker-compose.EXAMPLE.yml",
+            "LOCAL_COMPOSE_PROJECT": "botq-EXAMPLE-test",
             "LOCAL_DEPLOYMENT_HEALTH_URL": "http://127.0.0.1:18086/health/ready",
             "LOCAL_DEPLOYMENT_HEALTH_TIMEOUT_SECONDS": "5",
         }
     )
 
-    assert adapter.compose_files == ["docker-compose.yml", "docker-compose.pilot.yml"]
-    assert adapter.project == "botq-pilot-test"
+    assert adapter.compose_files == ["docker-compose.yml", "docker-compose.EXAMPLE.yml"]
+    assert adapter.project == "botq-EXAMPLE-test"
     assert adapter.health_timeout == 5
 
 

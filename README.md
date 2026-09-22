@@ -4,9 +4,9 @@ botq is a human-supervised AI software-delivery control plane. It connects requi
 architecture, planning, reviewable agent changes, acceptance, releases, deployments, gates, and
 audit evidence while keeping authorization and approval decisions authoritative in the backend.
 
-The repository-side implementation is substantially exercised locally. Production readiness and
-pilot gate closure still require target-environment evidence, real provider credentials, and named
-human or policy-selected automation decisions.
+The repository-side implementation is substantially exercised locally. Production readiness still
+requires target-environment evidence, real provider credentials, and named human or policy-selected
+automation decisions.
 
 ## Architecture
 
@@ -58,6 +58,18 @@ docker compose exec api flask bootstrap --org-name "Acme" --slug "acme" `
 Open the SPA at <http://localhost:8884>. Health endpoints are `/health/live` and `/health/ready`;
 the API contract is available at `/openapi.json` and interactive API documentation at `/docs`.
 Never use the example credentials or development secrets in production.
+
+For production-like Compose deployment, inject the required secrets and provider settings through
+the deployment environment and apply the production overlay:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.production.yml up -d --build
+```
+
+The production overlay disables bootstrap, requires OIDC and Redis-backed rate limiting, removes
+the published PostgreSQL port, clears the local `.env` file from service configuration, and uses
+restart policies plus health-gated proxy startup. TLS should terminate at the approved ingress or
+load balancer in front of Nginx.
 
 ## Configuration
 
@@ -136,8 +148,6 @@ installation, and production-like image builds. External provider mutation tests
 - [API and gate control guide](docs/API_GATE_CONTROL_GUIDE.md)
 - [E2E and integration testing](docs/E2E_TESTING.md)
 - [Frontend route coverage](docs/FRONTEND_ROUTE_COVERAGE.md)
-- [Pilot execution guide](docs/PILOT_EXECUTION_GUIDE.md)
-- [Pilot status and remaining evidence](docs/PILOT_STATUS.md)
 - [Phase 6 operations](docs/PHASE6_OPERATIONS.md)
 - [Software-delivery platform requirements](docs/AI_Software_Delivery_Platform_SRS.docx)
 

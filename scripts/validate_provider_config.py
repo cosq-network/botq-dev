@@ -2,7 +2,7 @@
 
 The script reports missing configuration names, never prints secret values, and
 does not make network calls. It is suitable for CI baseline checks and for a
-deployment preflight before running the real pilot.
+deployment preflight before running a real provider deployment.
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ def validate(
             "AGENT_IMPLEMENTATION_PROVIDER must contain disabled, heroku, or runpod"
         )
     if require_phase3 and implementation == ["disabled"]:
-        errors.append("Phase 3 pilot requires AGENT_IMPLEMENTATION_PROVIDER")
+        errors.append("Managed implementation requires AGENT_IMPLEMENTATION_PROVIDER")
 
     selected = set(analysis + implementation)
     if "heroku" in selected:

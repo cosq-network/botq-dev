@@ -150,7 +150,7 @@ def test_api_automation_can_close_all_seven_gates_with_submitted_evidence(
                 json={
                     "key": key,
                     "status": "passed",
-                    "source": "api-only-pilot-test",
+                    "source": "api-only-EXAMPLE-test",
                     "command": f"verify {key}",
                     "content_hash": f"{gate_number:02d}{len(key):02d}".ljust(64, "a"),
                     "evidence": {

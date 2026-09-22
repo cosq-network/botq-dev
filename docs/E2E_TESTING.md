@@ -42,9 +42,9 @@ gate evidence/evaluation/decision APIs, API automation approval, and gate summar
 
 The repository API is tested safely without an external Git host: read and
 missing-connection controls are exercised, and connection provisioning is
-asserted to fail closed when no validated remote is configured. A real SSH
-success path remains covered by `scripts/validate_git.ps1` and the optional
-`git-validation` Compose profile.
+asserted to fail closed when no validated remote is configured. Production
+deployments should validate their approved Git host through the configured
+repository connection and host-key policy.
 
 External provider success paths are intentionally not part of the default E2E
 run. They require real credentials and a non-production endpoint. Provider

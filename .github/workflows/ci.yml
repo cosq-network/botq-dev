@@ -107,7 +107,7 @@ jobs:
         run: bandit -q -r app
 
       - name: Secret-pattern scan
-        run: "! rg -n --hidden --glob '!.git/**' --glob '!.pilot-evidence/**' --glob '!pilot-botq-dev/**' '(AKIA|-----BEGIN|ghp_|github_pat_|xox[baprs]-)' ."
+        run: "! rg -n --hidden --glob '!.git/**' --glob '!.evidence/**' '(AKIA|-----BEGIN|ghp_|github_pat_|xox[baprs]-)' ."
 
       - name: Dependency vulnerability scan
         run: pip-audit -r requirements.txt
