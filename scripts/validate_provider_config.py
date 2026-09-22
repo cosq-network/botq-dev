@@ -16,10 +16,16 @@ from urllib.parse import urlparse
 
 from dotenv import dotenv_values
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
+from app.security.network import validate_external_https_url
+
 
 def _https(value: str) -> bool:
-    parsed = urlparse(value)
-    return parsed.scheme == "https" and bool(parsed.netloc)
+    try:
+        validate_external_https_url(value)
+    except ValueError:
+        return False
+    return True
 
 
 def validate(
@@ -39,19 +45,19 @@ def validate(
         for item in environ.get("AGENT_IMPLEMENTATION_PROVIDER", "disabled").split(",")
         if item.strip()
     ]
-    allowed = {"rules", "heroku", "runpod"}
+    allowed = {"rules", "heroku", "runpod", "openai_compatible"}
     errors = []
     warnings = []
 
     if not analysis or any(item not in allowed for item in analysis):
         errors.append(
-            "REQUIREMENT_ANALYSIS_PROVIDER must contain rules, heroku, or runpod"
+            "REQUIREMENT_ANALYSIS_PROVIDER must contain rules, heroku, runpod, or openai_compatible"
         )
     if not implementation or any(
-        item not in {"disabled", "heroku", "runpod"} for item in implementation
+        item not in {"disabled", "heroku", "runpod", "openai_compatible"} for item in implementation
     ):
         errors.append(
-            "AGENT_IMPLEMENTATION_PROVIDER must contain disabled, heroku, or runpod"
+            "AGENT_IMPLEMENTATION_PROVIDER must contain disabled, heroku, runpod, or openai_compatible"
         )
     if require_phase3 and implementation == ["disabled"]:
         errors.append("Managed implementation requires AGENT_IMPLEMENTATION_PROVIDER")
@@ -77,6 +83,23 @@ def validate(
             environ["RUNPOD_INFERENCE_URL"]
         ):
             errors.append("RUNPOD_INFERENCE_URL must be HTTPS")
+    if "openai_compatible" in selected:
+        for name in (
+            "OPENAI_COMPATIBLE_BASE_URL",
+            "OPENAI_COMPATIBLE_API_KEY",
+            "OPENAI_COMPATIBLE_MODEL",
+            "OPENAI_COMPATIBLE_MAX_TOKENS",
+        ):
+            if not environ.get(name):
+                errors.append(f"missing {name}")
+        if environ.get("OPENAI_COMPATIBLE_BASE_URL") and not _https(environ["OPENAI_COMPATIBLE_BASE_URL"]):
+            errors.append("OPENAI_COMPATIBLE_BASE_URL must be HTTPS")
+        if environ.get("OPENAI_COMPATIBLE_MAX_TOKENS"):
+            try:
+                if int(environ["OPENAI_COMPATIBLE_MAX_TOKENS"]) <= 0:
+                    errors.append("OPENAI_COMPATIBLE_MAX_TOKENS must be positive")
+            except ValueError:
+                errors.append("OPENAI_COMPATIBLE_MAX_TOKENS must be an integer")
 
     if require_phase4:
         for name in (
@@ -130,6 +153,11 @@ def validate(
         "errors": errors,
         "warnings": warnings,
         "secrets_checked": True,
+        "secrets_present": {
+            "openai_compatible_api_key": bool(environ.get("OPENAI_COMPATIBLE_API_KEY")),
+            "heroku_inference_key": bool(environ.get("HEROKU_INFERENCE_KEY")),
+            "runpod_api_key": bool(environ.get("RUNPOD_API_KEY")),
+        },
         "network_probe": False,
     }
 

@@ -3,8 +3,9 @@
 import json
 
 from app.design.adapter import PenpotAdapter
+from app.planning.executor import ManagedInferenceAgentExecutor
 from app.release.adapter import WebhookDeploymentAdapter
-from app.requirements.analysis import HerokuInferenceAnalyzer
+from app.requirements.analysis import HerokuInferenceAnalyzer, configured_analyzer
 
 
 def test_penpot_retrieve_uses_bearer_auth_and_redacts_provider_secrets(requests_mock):
@@ -62,3 +63,54 @@ def test_managed_analysis_provider_sends_schema_constrained_json_request(request
     body = json.loads(request.text)
     assert body["response_format"] == {"type": "json_object"}
     assert "The system must authenticate users." in body["messages"][1]["content"]
+
+
+def test_openai_compatible_analysis_uses_normalized_chat_completions_endpoint(requests_mock):
+    url = "https://gateway.example/v1/chat/completions"
+    requests_mock.post(
+        url,
+        json={
+            "choices": [{"message": {"content": '{"findings": [], "proposed_work_items": []}'}}],
+            "usage": {"total_tokens": 4},
+        },
+    )
+    analyzer = configured_analyzer(
+        {
+            "REQUIREMENT_ANALYSIS_PROVIDER": "openai_compatible",
+            "OPENAI_COMPATIBLE_BASE_URL": "https://gateway.example///",
+            "OPENAI_COMPATIBLE_API_KEY": "openai-test-key",
+            "OPENAI_COMPATIBLE_MODEL": "gateway-model",
+            "OPENAI_COMPATIBLE_MAX_TOKENS": 4096,
+        }
+    )
+    result = analyzer.analyze({"functional_specifications": ["must authenticate"]})
+    assert result.findings == []
+    assert requests_mock.last_request.headers["Authorization"] == "Bearer openai-test-key"
+    assert json.loads(requests_mock.last_request.text)["model"] == "gateway-model"
+
+
+def test_openai_compatible_agent_sends_strict_json_request(requests_mock):
+    url = "https://gateway.example/v1/chat/completions"
+    requests_mock.post(
+        url,
+        json={
+            "choices": [{"message": {"content": '{"changes":[{"path":"a.py","action":"add","diff":"@@"}],"self_review":{"result":"ok"}}'}}]
+        },
+    )
+    executor = ManagedInferenceAgentExecutor(
+        {
+            "AGENT_IMPLEMENTATION_PROVIDER": "openai_compatible",
+            "OPENAI_COMPATIBLE_BASE_URL": "https://gateway.example/",
+            "OPENAI_COMPATIBLE_API_KEY": "openai-test-key",
+            "OPENAI_COMPATIBLE_MODEL": "gateway-model",
+        }
+    )
+    from types import SimpleNamespace
+
+    result = executor.execute(
+        SimpleNamespace(objective="ship", environment={}, writable_paths=["a.py"], allowed_tools=[]),
+        {"steps": []},
+    )
+    assert result.provider == "openai_compatible"
+    body = json.loads(requests_mock.last_request.text)
+    assert body["response_format"] == {"type": "json_object"}

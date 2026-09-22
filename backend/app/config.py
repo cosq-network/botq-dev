@@ -108,6 +108,10 @@ class Config:
     RUNPOD_API_KEY = os.environ.get("RUNPOD_API_KEY", "")
     RUNPOD_ENDPOINT_ID = os.environ.get("RUNPOD_ENDPOINT_ID", "")
     RUNPOD_INFERENCE_URL = os.environ.get("RUNPOD_INFERENCE_URL", "")
+    OPENAI_COMPATIBLE_BASE_URL = os.environ.get("OPENAI_COMPATIBLE_BASE_URL", "")
+    OPENAI_COMPATIBLE_API_KEY = os.environ.get("OPENAI_COMPATIBLE_API_KEY", "")
+    OPENAI_COMPATIBLE_MODEL = os.environ.get("OPENAI_COMPATIBLE_MODEL", "")
+    OPENAI_COMPATIBLE_MAX_TOKENS = int(os.environ.get("OPENAI_COMPATIBLE_MAX_TOKENS", "4096"))
 
     PENPOT_API_BASE_URL = os.environ.get("PENPOT_API_BASE_URL", "")
     PENPOT_API_TOKEN = os.environ.get("PENPOT_API_TOKEN", "")

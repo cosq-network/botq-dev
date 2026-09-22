@@ -74,7 +74,8 @@ load balancer in front of Nginx.
 ## Configuration
 
 `backend/.env.example` is the authoritative non-secret manifest. The ignored `backend/.env` is
-kept synchronized with it using safe development defaults. Optional OIDC, Heroku, RunPod, Penpot,
+kept synchronized with it using safe development defaults. Optional OIDC, Heroku, RunPod,
+OpenAI-compatible inference, Penpot,
 preview, deployment, Redis, and external-provider values remain blank until explicitly configured.
 
 Important groups include:
@@ -82,7 +83,7 @@ Important groups include:
 | Area | Variables |
 | --- | --- |
 | Security and auth | `ENVIRONMENT`, `SECRET_KEY`, `AUDIT_SECRET`, `SECRET_ENCRYPTION_KEY`, `LOCAL_AUTH_ENABLED`, `OIDC_*`, `BOOTSTRAP_TOKEN` |
-| Analysis and agent worker | `REQUIREMENT_ANALYSIS_*`, `AGENT_IMPLEMENTATION_*`, `HEROKU_*`, `RUNPOD_*` |
+| Analysis and agent worker | `REQUIREMENT_ANALYSIS_*`, `AGENT_IMPLEMENTATION_*`, `HEROKU_*`, `RUNPOD_*`, `OPENAI_COMPATIBLE_*` |
 | Design and deployment | `PENPOT_*`, `PREVIEW_DEPLOYMENT_*`, `DEPLOYMENT_*`, `LOCAL_COMPOSE_*` |
 | Operations | `RATE_LIMIT_*`, `REDIS_URL`, `RETENTION_*`, `SANDBOX_*` |
 

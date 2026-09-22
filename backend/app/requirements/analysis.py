@@ -21,6 +21,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from ..errors import ApiError, ValidationError
+from ..inference.openai_compatible import ChatCompletionTransportError, request_chat_completion
 from ..security.network import validate_external_https_url
 
 FINDING_CATEGORIES = {"ambiguous", "conflicting", "duplicate", "missing", "untestable"}
@@ -66,8 +67,8 @@ class RequirementAnalyzer(ABC):
 
 
 class AnalysisProviderError(ApiError):
-    def __init__(self, message: str = "Requirement analysis provider failed"):
-        super().__init__(message, code="analysis_provider_error", status=502)
+    def __init__(self, message: str = "Requirement analysis provider failed", details: dict | None = None):
+        super().__init__(message, code="analysis_provider_error", status=502, details=details)
 
 
 class RuleBasedRequirementAnalyzer(RequirementAnalyzer):
@@ -107,6 +108,24 @@ class JsonInferenceAnalyzer(RequirementAnalyzer):
         return parse_provider_result(payload)
 
     def _request(self, content: dict) -> dict:
+        if self.provider in {"heroku", "openai_compatible"}:
+            try:
+                return request_chat_completion(
+                    base_url=self.url.rsplit("/v1/chat/completions", 1)[0],
+                    api_key=self.api_key,
+                    payload=self._payload(content),
+                    timeout=self.timeout,
+                )
+            except ChatCompletionTransportError as exc:
+                status = f" (HTTP {exc.status})" if exc.status else ""
+                raise AnalysisProviderError(
+                    f"{self.provider} inference provider request failed{status}",
+                    details={
+                        "provider": self.provider,
+                        "http_status": exc.status,
+                        "retryable": exc.retryable,
+                    },
+                ) from exc
         session = requests.Session()
         session.mount(
             "https://",
@@ -184,6 +203,16 @@ class HerokuInferenceAnalyzer(JsonInferenceAnalyzer):
         }
 
 
+class OpenAICompatibleInferenceAnalyzer(HerokuInferenceAnalyzer):
+    """Deployment-configured OpenAI-compatible Chat Completions adapter."""
+
+    def __init__(self, *, base_url: str, api_key: str, model: str, timeout: int, max_tokens: int = 4096):
+        super().__init__(
+            base_url=base_url, api_key=api_key, model=model, timeout=timeout, max_tokens=max_tokens
+        )
+        self.provider = "openai_compatible"
+
+
 class RunPodInferenceAnalyzer(JsonInferenceAnalyzer):
     """RunPod Serverless ``runsync`` adapter for a JSON-producing worker."""
 
@@ -245,8 +274,11 @@ def configured_analyzer(config: dict) -> RequirementAnalyzer:
         if provider == "runpod":
             analyzers.append(_runpod_analyzer(config, timeout))
             continue
+        if provider == "openai_compatible":
+            analyzers.append(_openai_compatible_analyzer(config, timeout))
+            continue
         raise ValidationError(
-            "REQUIREMENT_ANALYSIS_PROVIDER entries must be rules, heroku or runpod"
+            "REQUIREMENT_ANALYSIS_PROVIDER entries must be rules, heroku, runpod or openai_compatible"
         )
     if not analyzers:
         raise ValidationError("REQUIREMENT_ANALYSIS_PROVIDER must contain at least one provider")
@@ -285,6 +317,21 @@ def _runpod_analyzer(config: dict, timeout: int) -> RunPodInferenceAnalyzer:
         api_key=key,
         timeout=timeout,
         url=url,
+    )
+
+
+def _openai_compatible_analyzer(config: dict, timeout: int) -> OpenAICompatibleInferenceAnalyzer:
+    key = config.get("OPENAI_COMPATIBLE_API_KEY")
+    base_url = config.get("OPENAI_COMPATIBLE_BASE_URL")
+    model = config.get("OPENAI_COMPATIBLE_MODEL")
+    if not key or not base_url or not model:
+        raise ValidationError(
+            "OpenAI-compatible analysis requires OPENAI_COMPATIBLE_BASE_URL, "
+            "OPENAI_COMPATIBLE_API_KEY and OPENAI_COMPATIBLE_MODEL"
+        )
+    return OpenAICompatibleInferenceAnalyzer(
+        base_url=base_url, api_key=key, model=model, timeout=timeout,
+        max_tokens=int(config.get("OPENAI_COMPATIBLE_MAX_TOKENS", 4096)),
     )
 
 

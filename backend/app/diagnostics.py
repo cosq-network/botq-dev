@@ -25,6 +25,7 @@ def build_diagnostic_report(organization_id) -> dict:
             "providers_configured": {
                 "heroku_inference": bool(_config("HEROKU_INFERENCE_BASE_URL")),
                 "runpod_inference": bool(_config("RUNPOD_INFERENCE_URL")),
+                "openai_compatible_inference": bool(_config("OPENAI_COMPATIBLE_BASE_URL")),
                 "preview_deployment": bool(_config("PREVIEW_DEPLOYMENT_URL")),
                 "deployment": bool(_config("DEPLOYMENT_URL")),
             },

@@ -20,6 +20,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from ..errors import ApiError, ValidationError
+from ..inference.openai_compatible import ChatCompletionTransportError, request_chat_completion
 from ..security.network import validate_external_https_url
 
 
@@ -51,7 +52,7 @@ class AgentExecutor(ABC):
 
 
 class ManagedInferenceAgentExecutor(AgentExecutor):
-    """Call Heroku Managed Inference and/or RunPod Serverless."""
+    """Call OpenAI-compatible, Heroku, and/or RunPod providers."""
 
     def __init__(self, config: dict, model_config: dict | None = None):
         self.config = config
@@ -65,18 +66,18 @@ class ManagedInferenceAgentExecutor(AgentExecutor):
         if not self.providers or self.providers == ["disabled"]:
             raise AgentExecutionError(
                 "Phase 3 implementation worker is disabled; configure "
-                "AGENT_IMPLEMENTATION_PROVIDER as heroku, runpod, or heroku,runpod"
+                "AGENT_IMPLEMENTATION_PROVIDER as openai_compatible, heroku, or runpod"
             )
-        invalid = set(self.providers) - {"heroku", "runpod"}
+        invalid = set(self.providers) - {"openai_compatible", "heroku", "runpod"}
         if invalid:
-            raise ValidationError("AGENT_IMPLEMENTATION_PROVIDER entries must be heroku or runpod")
+            raise ValidationError("AGENT_IMPLEMENTATION_PROVIDER entries must be openai_compatible, heroku or runpod")
         self.timeout = int(
             self.model_config.get(
                 "timeout_seconds", config.get("AGENT_IMPLEMENTATION_TIMEOUT_SECONDS", 180)
             )
         )
         self.max_tokens = int(
-            self.model_config.get("max_tokens", config.get("HEROKU_INFERENCE_MAX_TOKENS", 4096))
+            self.model_config.get("max_tokens", config.get("OPENAI_COMPATIBLE_MAX_TOKENS", config.get("HEROKU_INFERENCE_MAX_TOKENS", 4096)))
         )
 
     @property
@@ -113,6 +114,21 @@ class ManagedInferenceAgentExecutor(AgentExecutor):
 
     def _request(self, provider: str, prompt: str) -> dict:
         payload = self._payload(provider, prompt)
+        if provider in {"heroku", "openai_compatible"}:
+            base_url, key = self._endpoint(provider)
+            try:
+                return request_chat_completion(
+                    base_url=base_url,
+                    api_key=key,
+                    payload=payload,
+                    timeout=self.timeout,
+                )
+            except ChatCompletionTransportError as exc:
+                status = f" (HTTP {exc.status})" if exc.status else ""
+                raise AgentExecutionError(
+                    f"{provider} implementation provider request failed{status}",
+                    {"provider": provider, "http_status": exc.status, "retryable": exc.retryable},
+                ) from exc
         url, key = self._endpoint(provider)
         session = requests.Session()
         retry = Retry(
@@ -166,6 +182,16 @@ class ManagedInferenceAgentExecutor(AgentExecutor):
             url = f"{base_url.rstrip('/')}/v1/chat/completions"
             _require_https_endpoint(url, "Heroku")
             return url, key
+        if provider == "openai_compatible":
+            base_url = self.config.get("OPENAI_COMPATIBLE_BASE_URL")
+            key = self.config.get("OPENAI_COMPATIBLE_API_KEY")
+            if not base_url or not key:
+                raise AgentExecutionError(
+                    "OpenAI-compatible implementation requires OPENAI_COMPATIBLE_BASE_URL and "
+                    "OPENAI_COMPATIBLE_API_KEY"
+                )
+            _require_https_endpoint(base_url, "OpenAI-compatible")
+            return base_url, key
         key = self.config.get("RUNPOD_API_KEY")
         endpoint_id = self.config.get("RUNPOD_ENDPOINT_ID")
         if not key or not endpoint_id:
@@ -180,11 +206,13 @@ class ManagedInferenceAgentExecutor(AgentExecutor):
 
     def _payload(self, provider: str, prompt: str) -> dict:
         model = self.model_config.get("model") or self.config.get("AGENT_IMPLEMENTATION_MODEL")
-        if provider == "heroku":
+        if provider in {"heroku", "openai_compatible"}:
             if not model:
-                model = self.config.get("HEROKU_INFERENCE_MODEL")
+                model = self.config.get(
+                    "OPENAI_COMPATIBLE_MODEL" if provider == "openai_compatible" else "HEROKU_INFERENCE_MODEL"
+                )
             if not model:
-                raise AgentExecutionError("Heroku implementation requires an inference model")
+                raise AgentExecutionError(f"{provider} implementation requires an inference model")
             return {
                 "model": model,
                 "temperature": 0,
